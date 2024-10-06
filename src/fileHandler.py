@@ -1,7 +1,7 @@
 import folium
 import time
 from src.point import Point
-from src.valid_points import ValidPoint
+from src.valid_points import ValidPoints
 from src.delimitation import Delimitation
 
 class FileHandler:
@@ -38,22 +38,26 @@ class FileHandler:
         """
         self.__filename=filename
     
-    def read_points(self) -> ValidPoint:
+    def read_points(self) -> ValidPoints:
         """
-        This method reads point data from a file and stores it in a ValidPoint object.
+        This method reads point data from a file and stores it in a ValidPoints object.
 
-        Returns: ValidPoint
+        Returns: ValidPoints
 
         Complexity: O(p), p being the number of points stored in the file
         """
-        valid_points=[]
-        with open(self.__filename, "r") as md:
-            for line in md:
-                items = line.split()
-                valid_points += Point(items[0], float(items[1]),float(items[2])), 
-        return ValidPoint(valid_points)
+        valid_points = []
+        try:
+            with open(self.__filename, "r") as md:
+                for line in md:
+                    items = line.split()
+                    valid_points += Point(items[0], float(items[1]),float(items[2])), 
+            return ValidPoints(valid_points)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The file '{self.__filename}' was not found.")
 
-    def make_map(self, delimitation=None):
+
+    def make_map(self, delimitation = None):
         """
         This method creates a HTML file containing a map that represents the points stored
         in the file handler's ValidPoints object as circles, and the delimitation as
@@ -61,25 +65,26 @@ class FileHandler:
 
         Arguments: delimitation(Delimitation)
 
-        Complexity: O(p+d), p being the number of points of the ValidPoint object and d 
+        Complexity: O(p+d), p being the number of points of the ValidPoints object and d 
         being the number of points of the Delimitation object
         """
         map = folium.Map()
-        points=self.read_points().get_all_points()
+        points = self.read_points().get_all_points()
         coords = [(point.get_longitude(), point.get_latitude()) for point in points]
 
         for longitude, latitude in coords:
             folium.CircleMarker(
-                location=[latitude, longitude],  
-                radius=2,
-                weight=5
+                location = [latitude, longitude],  
+                radius = 2,
+                weight = 5
             ).add_to(map)
         
-        points = delimitation.get_points()  
-        del_coordinates = [(point.get_latitude(), point.get_longitude()) for point in points]
-        folium.PolyLine(locations=del_coordinates, color="blue", weight=2.5).add_to(map)
-        
-        self.__filename=f"map_{time.time()}.html"
+        if delimitation:
+            del_points = delimitation.get_points()  
+            del_coordinates = [(del_point.get_latitude(), del_point.get_longitude()) for del_point in del_points]
+            folium.PolyLine(locations=del_coordinates, color="blue", weight=2.5).add_to(map)
+            
+        self.__filename = f"map_{time.time()}.html"
         map.save(self.__filename)
     
     def __repr__(self) -> str:
