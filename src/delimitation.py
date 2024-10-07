@@ -1,19 +1,20 @@
 import matplotlib.pyplot as plt
+
 from src.point import Point
 from src.valid_points import ValidPoints
 
 class Delimitation:
     """
-    The Delimitation ADT models a polygon that can be constructed by sequentially adding 
+    The Delimitation ADT models a polygon that can be constructed by sequentially adding
     points.
- 
+
     Attributes:
         __points (list): A list that stores all the points in the order they are added.
         __first_point (Point or None): The first point added to the Delimitation.
         __third_last_point (Point or None): The third-to-last point added to the Delimitation.
         __second_last_point (Point or None): The second-to-last point added to the Delimitation.
         __last_point (Point or None): The last point added to the Delimitation.
-    
+
     Methods:
         add_point(Point): Adds a point to the Delimitation and updates relevant attributes.
         get_first(): Returns the first point added to the Delimitation, or None if no points exist.
@@ -25,7 +26,9 @@ class Delimitation:
         intersects(Point, Point, Point, Point): Determines whether two line segments formed by the given points intersect.
         crosses_delimitation(Point, Point): Checks if a line segment formed by two points intersects with any existing segments in the Delimitation.
         show(ValidPoints): Displays the current Delimitation and points using a plotting tool.
+        show(ValidPoints): Displays the current Delimitation and points using a plotting tool.
     """
+
 
     def __init__(self):
         """
@@ -49,8 +52,8 @@ class Delimitation:
         Complexity: O(1)
         """
         return self.__points
-     
-    def get_first(self) -> Point:
+
+    def get_first(self) -> Point | None:
         """
         This method retrieves the first point that was added to the Delimitation object.
 
@@ -59,12 +62,12 @@ class Delimitation:
         Complexity: O(1)
         """
         return self.__first_point
-    
+
     def get_last_two(self) -> tuple:
-        """ 
+        """
         This method retrieves the last two Point objects that have been added to the
         Delimitation object,the rightmost being the last one added.
-        
+
         Returns: tuple(Point, Point)
 
         Complexity: O(1)
@@ -81,6 +84,7 @@ class Delimitation:
 
         Complexity: O(p), p being the number of points
         """
+        vertices = self.get_points()
         vertices = self.get_points()
         n = len(vertices)
 
@@ -131,37 +135,39 @@ class Delimitation:
         Complexity: O(1)
         """
         return len(self.get_points())
-    
+
     def add_point(self, point: Point):
         """
         This method adds a Point object to the Delimitation object.
-        
+
         Arguments: point(Point)
 
         Complexity: O(1)
         """
-        if type(point) != Point:
-            raise ValueError("Only Point objects can be added to the Delimitation object")
+        if type(point)!=Point:
+            raise ValueError("Only Point objects can be added to the Delimitation")
         else: 
-            if self.size() > 0:
+            if self.size()>0:
                 self.__points.append(point)
-                self.__third_last_point=self.__second_last_point
-                self.__second_last_point=self.__last_point
-                self.__last_point= point
+                self.__third_last_point = self.__second_last_point
+                self.__second_last_point = self.__last_point
+                self.__last_point = point
             else:
                 self.__points.append(point)
-                self.__first_point=point
-                self.__last_point= point
-        
+                self.__first_point = point
+                self.__last_point = point
+
     def pop_point(self) -> Point:
         """
         This method removes the last Point object that had been added to the
         Delimitation object.
-        
+
         Returns: Point
 
         Complexity: O(1)
         """
+        self.__second_last_point = self.__third_last_point
+        self.__last_point = self.__second_last_point
         self.__second_last_point = self.__third_last_point
         self.__last_point = self.__second_last_point
         return self.__points.pop()
@@ -192,7 +198,7 @@ class Delimitation:
 
         Returns: bool
 
-        Complexity: O(1)        
+        Complexity: O(1)
         """
         if not all(isinstance(p, Point) for p in [p1, p2, p3, p4]):
             raise ValueError("The four points must be of type 'Point'.")
@@ -206,6 +212,7 @@ class Delimitation:
         
         det = a1 * b2 - b1 * a2
 
+        if det == 0:
         if det == 0:
             return False
         else:
@@ -221,7 +228,7 @@ class Delimitation:
         delimitation. If the new segment ends in the first point of the delimitation,
         while not intersecting any other segment belonging to the delimitation, this is not
         considered to be a crossing.
-        
+
         Arguments: p1(Point), p2(Point)
 
         Returns: bool
@@ -253,6 +260,7 @@ class Delimitation:
 
         Complexity: O(p+v), p being the number of points in the Delimitation object
         and v being the number of points in the ValidPoints object.
+        and v being the number of points in the ValidPoints object.
         """
         if not isinstance(points, ValidPoints):
             raise ValueError("The stored points must be of type 'ValidPoints'.")
@@ -265,13 +273,13 @@ class Delimitation:
 
         if coords:
             latitudes, longitudes, point_ids = zip(*coords)
-            ax.scatter(latitudes, longitudes, color='red')
+            ax.scatter(latitudes, longitudes, color="red")
 
             delim_latitudes = [point.get_latitude() for point in self.get_points()]
             delim_longitudes = [point.get_longitude() for point in self.get_points()]
 
             if len(delim_latitudes) > 1:
-                ax.plot(delim_latitudes, delim_longitudes, color='blue', linewidth=1)
+                ax.plot(delim_latitudes, delim_longitudes, color="blue", linewidth=1)
 
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
@@ -279,15 +287,18 @@ class Delimitation:
                     ax.plot(
                         [first_point.get_latitude(), last_point.get_latitude()],
                         [first_point.get_longitude(), last_point.get_longitude()],
-                        color='blue', linewidth=1
+                        color="blue",
+                        linewidth=1,
                     )
 
             for i, point_id in enumerate(point_ids):
-                ax.annotate(point_id, (latitudes[i], longitudes[i]), textcoords="offset points", xytext=(0, 5), ha='center')
+                ax.annotate(
+                    point_id, (latitudes[i], longitudes[i]), textcoords="offset points", xytext=(0, 5), ha="center"
+                )
 
-        ax.set_title('Delimitation')
-        ax.set_xlabel('Latitude')
-        ax.set_ylabel('Longitude')
+        ax.set_title("Delimitation")
+        ax.set_xlabel("Latitude")
+        ax.set_ylabel("Longitude")
         plt.show()
 
     def __eq__(self, other: "Delimitation") -> bool:
@@ -342,7 +353,7 @@ class Delimitation:
         This method returns a representation of the Delimitation object.
 
         Returns: str
-        
+
         Complexity: O(p), p being the number of points in the Delimitation object
         """
         points = self.get_points()

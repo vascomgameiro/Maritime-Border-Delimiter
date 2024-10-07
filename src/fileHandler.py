@@ -1,5 +1,8 @@
-import folium
 import time
+
+import folium
+
+from delimitation import Delimitation
 from src.point import Point
 from src.valid_points import ValidPoints
 from src.delimitation import Delimitation
@@ -7,7 +10,7 @@ from src.delimitation import Delimitation
 class FileHandler:
     """
     The FileHandler ADT is responsible for managing file interactions within the program.
-    It handles reading a specified file containing data about points and generating HTML maps 
+    It handles reading a specified file containing data about points and generating HTML maps
     using those points.
 
     Attributes:
@@ -16,18 +19,18 @@ class FileHandler:
     Methods:
         __init__(str): Initializes a new FileHandler object with the specified file name.
         The file handler is automatically returned at instantiation.
-        
-        read_points(): Reads data about points from the specified file and 
+
+        read_points(): Reads data about points from the specified file and
         creates a ValidPoints object to store the Point objects. Returns the ValidPoints object.
-        
-        make_map(Delimitation): Creates an HTML file containing a map 
-        that represents the points stored in the ValidPoints object as circles, 
+
+        make_map(Delimitation): Creates an HTML file containing a map
+        that represents the points stored in the ValidPoints object as circles,
         and the provided Delimitation object as a line. Uses the folium module to generate the map.
-       
-        __repr__(): Returns a string representation of the FileHandler object, including 
+
+        __repr__(): Returns a string representation of the FileHandler object, including
         the file name and the points that have been imported.
     """
-    
+
     def __init__(self, filename: str):
         """
         This method initializes a FileHandler object.
@@ -70,6 +73,7 @@ class FileHandler:
         """
         map = folium.Map()
         points = self.read_points().get_all_points()
+        points = self.read_points().get_all_points()
         coords = [(point.get_longitude(), point.get_latitude()) for point in points]
 
         for longitude, latitude in coords:
@@ -86,15 +90,13 @@ class FileHandler:
             
         self.__filename = f"map_{time.time()}.html"
         map.save(self.__filename)
-    
+
     def __repr__(self) -> str:
         """
         This method returns a representation of the FileHandler object.
 
         Returns: str
-        
+
         Complexity: O(p), p being the number of points in the FileHandler object
         """
         return f"Filename: {self.__filename}\n Points: {self.read_points()}"
-    
-
