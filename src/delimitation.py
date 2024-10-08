@@ -1,3 +1,8 @@
+"""
+This module provides the Delimitation class, which models a polygon-like structure
+with methods to add points, check intersections, calculate areas, and more.
+"""
+
 import matplotlib.pyplot as plt
 
 from src.point import Point
@@ -85,7 +90,6 @@ class Delimitation:
         Complexity: O(p), p being the number of points
         """
         vertices = self.get_points()
-        vertices = self.get_points()
         n = len(vertices)
 
         if n < 3:
@@ -144,16 +148,16 @@ class Delimitation:
 
         Complexity: O(1)
         """
-        if type(point) is not Point:
+        if isinstance(point, Point):
             raise ValueError("Only Point objects can be added to the Delimitation")
+
+        self.__points.append(point)
+        self.__last_point = point
+        if self.size() > 0:
+            self.__third_last_point = self.__second_last_point
+            self.__second_last_point = self.__last_point
         else:
-            self.__points.append(point)
-            self.__last_point = point
-            if self.size() > 0:
-                self.__third_last_point = self.__second_last_point
-                self.__second_last_point = self.__last_point
-            else:
-                self.__first_point = point
+            self.__first_point = point
 
     def pop_point(self) -> Point:
         """
@@ -212,13 +216,12 @@ class Delimitation:
 
         if det == 0:
             return False
-        else:
-            x = (b2 * c1 - b1 * c2) / det
-            y = (a1 * c2 - a2 * c1) / det
+        x = (b2 * c1 - b1 * c2) / det
+        y = (a1 * c2 - a2 * c1) / det
 
-            return min(p1.get_longitude(), p2.get_longitude()) <= y <= max(
-                p1.get_longitude(), p2.get_longitude()
-            ) and min(p1.get_latitude(), p2.get_latitude()) <= x <= max(p1.get_latitude(), p2.get_latitude())
+        return min(p1.get_longitude(), p2.get_longitude()) <= y <= max(p1.get_longitude(), p2.get_longitude()) and min(
+            p1.get_latitude(), p2.get_latitude()
+        ) <= x <= max(p1.get_latitude(), p2.get_latitude())
 
     def crosses_delimitation(self, p1: Point, p2: Point) -> bool:
         """
@@ -241,7 +244,7 @@ class Delimitation:
             p3 = points[i - 1]
             p4 = points[i]
 
-            if self.intersects(p3, p4, p1, p2):
+            if self.intersects(p1=p3, p2=p4, p3=p1, p4=p2):
                 if (
                     p2 == self.get_first()
                     or p1 == self.get_first()
@@ -249,8 +252,7 @@ class Delimitation:
                     or p1 == self.get_last_two()[1]
                 ):
                     continue
-                else:
-                    return True
+                return True
         return False
 
     def show(self, points: ValidPoints):
@@ -272,7 +274,7 @@ class Delimitation:
         for point in points.get_all_points():
             coords.append((point.get_latitude(), point.get_longitude(), point.get_id()))
 
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
 
         if coords:
             latitudes, longitudes, point_ids = zip(*coords)

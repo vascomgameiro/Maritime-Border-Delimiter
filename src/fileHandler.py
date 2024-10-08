@@ -67,7 +67,7 @@ class FileHandler:
             print(f"Error reading points from {self.__filename}: {e}")
         return ValidPoints(valid_points)
 
-    def make_map(self, delimitation: Delimitation | None):
+    def make_map(self, delimitation: Delimitation | None = None):
         """
         This method creates a HTML file containing a map that represents the points stored
         in the file handler's ValidPoints object as circles, and the delimitation as

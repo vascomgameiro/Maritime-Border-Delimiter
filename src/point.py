@@ -1,7 +1,10 @@
+
 import math
 from typing import Tuple
 
+import units
 from geopy.distance import geodesic
+from geopy.units import nautical
 
 
 class Point:
@@ -29,6 +32,16 @@ class Point:
         self.__id = point_id
         self.__latitude = latitude
         self.__longitude = longitude
+        earth_radius = 6371009  # in meters
+        lat_dist = math.pi * earth_radius / 180.0
+        self.__y = nautical(meters=self.get_latitude() * lat_dist)  # type: ignore
+        self.__x = nautical(meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude())))  # type: ignore
+
+    def get_proj_x(self):
+        return self.__x
+
+    def get_proj_y(self):
+        return self.__y
 
     def get_id(self) -> str:
         """
@@ -146,13 +159,13 @@ class Point:
             point_B (Point): The second point.
 
         Returns:
-            Tuple[float, float]: A tuple representing the direction vector (delta_latitude, delta_longitude).
+            Tuple[float, float]: A tuple representing the direction vector (delta_projection_x, delta_projection_y).
                                 This is the difference between the coordinates of the two points.
 
         Complexity:
             O(1)
         """
-        return (point_A.get_latitude() - point_B.get_latitude(), point_A.get_longitude() - point_B.get_longitude())
+        return (point_A.get_proj_x() - point_B.get_proj_y(), point_A.get_proj_x() - point_B.get_proj_y())
 
     @staticmethod
     def __calculate_dot_product(vector_A: Tuple[float, float], vector_B: Tuple[float, float]) -> float:
