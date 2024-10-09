@@ -47,7 +47,7 @@ def main():
             break
 
         else:
-            print(f"Unknown command: {cmd}")
+            print(f"Unknown command: {cmd}. Valid Commands: import_points, make_map, quit")
 
 
 if __name__ == "__main__":

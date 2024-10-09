@@ -1,10 +1,63 @@
-
 import math
-from typing import Tuple
 
-import units
 from geopy.distance import geodesic
 from geopy.units import nautical
+
+
+class Vector:
+    def __init__(self, point_a: "Point", point_b: "Point") -> None:
+        """
+        Initializes a Vector object with two points.
+
+        Args:
+            point_a (Point): The starting point.
+            point_b (Point): The ending point.
+
+        Attributes:
+            x (float): The x component of the vector.
+            y (float): The y component of the vector.
+        Complexity:
+            O(1)
+        """
+
+        self.__x = point_b.get_proj_x() - point_a.get_proj_x()
+        self.__y = point_b.get_proj_y() - point_a.get_proj_y()
+
+    def get_X(self):
+        """
+        Returns the x component of the vector.
+
+        Returns:
+            float: The x component of the vector.
+        Complexity:
+            O(1)
+        """
+
+        return self.__x
+
+    def get_Y(self):
+        """
+        Returns the y component of the vector.
+
+        Returns:
+            float: The y component of the vector.
+
+        Complexity:
+            O(1)
+        """
+        return self.__y
+
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the Point object.
+
+        Returns:
+            str: String representation of the point.
+
+        Complexity:
+            O(1)
+        """
+        return f"Vector ({self.__x}, {self.__y})"
 
 
 class Point:
@@ -136,53 +189,13 @@ class Point:
             The angle is measured clockwise from the line point_b->self to self->point_c.
         """
 
-        vector_ba = self.__calculate_semi_line(point_b, self)
-        vector_ac = self.__calculate_semi_line(self, point_c)
+        vector1 = Vector(self, point_b)
+        vector2 = Vector(self, point_c)
 
-        magnitude_ba = point_b.distance(self)
-        magnitude_ac = self.distance(point_c)
-
-        dot_product = self.__calculate_dot_product(vector_ba, vector_ac)
-        cos_theta = dot_product / (magnitude_ba * magnitude_ac)
-
-        forward_angle = 360 - math.degrees(math.acos(cos_theta))
-
-        return forward_angle
-
-    @staticmethod
-    def __calculate_semi_line(point_A: "Point", point_B: "Point") -> Tuple[float, float]:
-        """
-        Calculates the direction vector from point_A to point_B.
-
-        Args:
-            point_A (Point): The first point.
-            point_B (Point): The second point.
-
-        Returns:
-            Tuple[float, float]: A tuple representing the direction vector (delta_projection_x, delta_projection_y).
-                                This is the difference between the coordinates of the two points.
-
-        Complexity:
-            O(1)
-        """
-        return (point_A.get_proj_x() - point_B.get_proj_y(), point_A.get_proj_x() - point_B.get_proj_y())
-
-    @staticmethod
-    def __calculate_dot_product(vector_A: Tuple[float, float], vector_B: Tuple[float, float]) -> float:
-        """
-        Calculates the dot product of two vectors.
-
-        Args:
-            vector_A (Tuple[float, float]): The first vector.
-            vector_B (Tuple[float, float]): The second vector.
-
-        Returns:
-            float: The dot product of the two vectors.
-
-        Complexity:
-            O(1)
-        """
-        return vector_A[0] * vector_B[0] + vector_A[1] * vector_B[1]
+        angle = math.degrees(
+            math.atan2(vector1.get_Y(), vector1.get_X()) - math.atan2(vector2.get_Y(), vector2.get_X())
+        )
+        return (360 + angle) % 360
 
     def __repr__(self) -> str:
         """
