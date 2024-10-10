@@ -268,6 +268,9 @@ class Delimitation:
         if not all(isinstance(p, Point) for p in [p1, p2]):
             raise ValueError("Both points must be of type 'Point'.")
         
+        if self.size() == 0:
+            raise ValueError("Delimitation object is empty.")
+        
         points = self.get_points()
         for i in range(1, len(points)):
             p3 = points[i - 1]
@@ -279,8 +282,8 @@ class Delimitation:
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
 
-                if (first_point is not None and ((intersect_x == first_point.get_latitude() and intersect_y == first_point.get_longitude())
-                    or (intersect_x == last_point.get_latitude() and intersect_y == last_point.get_longitude()))):
+                if ((intersect_x == first_point.get_latitude() and intersect_y == first_point.get_longitude())
+                    or (intersect_x == last_point.get_latitude() and intersect_y == last_point.get_longitude())):
                     continue
                 else:
                     return True
@@ -302,35 +305,33 @@ class Delimitation:
         
         coords = []
         for point in points.get_all_points():
-            coords.append((point.get_latitude(), point.get_longitude(), point.get_id()))
+            coords.append((point.get_proj_x(), point.get_proj_y(), point.get_id()))
 
         _, ax = plt.subplots()
 
         if coords:
             latitudes, longitudes, point_ids = zip(*coords)
             ax.scatter(latitudes, longitudes, color='red')
-
-            delim_latitudes = [point.get_latitude() for point in self.get_points()]
-            delim_longitudes = [point.get_longitude() for point in self.get_points()]
-
-            if len(delim_latitudes) > 1:
-                ax.plot(delim_latitudes, delim_longitudes, color='blue', linewidth=1)
-
-                if len(delim_latitudes) > 2:
-                    first_point = self.get_first()
-                    last_point = self.get_last_two()[1]
-                    if first_point and last_point:
-                        ax.plot(
-                            [first_point.get_latitude(), last_point.get_latitude()],
-                            [first_point.get_longitude(), last_point.get_longitude()],
-                            color='blue', 
-                            linewidth=1
-                        )
-
+            
             for i, point_id in enumerate(point_ids):
                 ax.annotate(
                     point_id, (latitudes[i], longitudes[i]), textcoords="offset points", xytext=(0, 5), ha='center'
                     )
+        
+        if self.size() > 1:
+            delim_latitudes = [point.get_proj_x() for point in self.get_points()]
+            delim_longitudes = [point.get_proj_y() for point in self.get_points()]
+            ax.plot(delim_latitudes, delim_longitudes, color='blue', linewidth=1)
+
+            if len(delim_latitudes) > 2:
+                first_point = self.get_first()
+                last_point = self.get_last_two()[1]
+                ax.plot(
+                    [first_point.get_proj_x(), last_point.get_proj_x()],
+                    [first_point.get_proj_y(), last_point.get_proj_y()],
+                    color='blue', 
+                    linewidth=1
+                )
 
         ax.set_title('Delimitation')
         ax.set_xlabel('Latitude')
@@ -392,5 +393,5 @@ class Delimitation:
         
         Complexity: O(p), p being the number of points in the Delimitation object
         """
-        points_repr = "; ".join([repr(point) for point in self.get_points()])
-        return f"Delimitation({points_repr})"
+        points_repr = ", ".join([repr(point) for point in self.get_points()])
+        return f"Delimitation([{points_repr}])"
