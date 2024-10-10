@@ -59,6 +59,23 @@ class Vector:
         """
         return f"Vector ({self.__x}, {self.__y})"
 
+    def __eq__(self, other: "Vector") -> bool:
+        """
+        Checks if this point is equal to another point.
+
+        Args:
+            other (object): The object to compare with.
+
+        Returns:
+            bool: True if equal, False otherwise.
+
+        Complexity:
+            O(1)
+        """
+        if not isinstance(other, Point):
+            return False
+        return self.__x == other.__x and self.__y == other.__y
+
 
 class Point:
     """
@@ -209,12 +226,12 @@ class Point:
         """
         return f"Point {self.__id} ({self.__latitude}, {self.__longitude})"
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: "Point") -> bool:
         """
         Checks if this point is equal to another point.
 
         Args:
-            other (object): The object to compare with.
+            other (Point): The Point to compare with.
 
         Returns:
             bool: True if equal, False otherwise.
