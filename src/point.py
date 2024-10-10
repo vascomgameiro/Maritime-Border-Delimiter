@@ -3,80 +3,6 @@ import math
 from geopy.distance import geodesic
 from geopy.units import nautical
 
-
-class Vector:
-    def __init__(self, point_a: "Point", point_b: "Point") -> None:
-        """
-        Initializes a Vector object with two points.
-
-        Args:
-            point_a (Point): The starting point.
-            point_b (Point): The ending point.
-
-        Attributes:
-            x (float): The x component of the vector.
-            y (float): The y component of the vector.
-        Complexity:
-            O(1)
-        """
-
-        self.__x = point_b.get_proj_x() - point_a.get_proj_x()
-        self.__y = point_b.get_proj_y() - point_a.get_proj_y()
-
-    def get_X(self):
-        """
-        Returns the x component of the vector.
-
-        Returns:
-            float: The x component of the vector.
-        Complexity:
-            O(1)
-        """
-
-        return self.__x
-
-    def get_Y(self):
-        """
-        Returns the y component of the vector.
-
-        Returns:
-            float: The y component of the vector.
-
-        Complexity:
-            O(1)
-        """
-        return self.__y
-
-    def __repr__(self) -> str:
-        """
-        Returns the string representation of the Point object.
-
-        Returns:
-            str: String representation of the point.
-
-        Complexity:
-            O(1)
-        """
-        return f"Vector ({self.__x}, {self.__y})"
-
-    def __eq__(self, other: "Vector") -> bool:
-        """
-        Checks if this point is equal to another point.
-
-        Args:
-            other (object): The object to compare with.
-
-        Returns:
-            bool: True if equal, False otherwise.
-
-        Complexity:
-            O(1)
-        """
-        if not isinstance(other, Point):
-            return False
-        return self.__x == other.__x and self.__y == other.__y
-
-
 class Point:
     """
     Represents a point on the globe with an identifier, latitude, and longitude.
@@ -206,11 +132,12 @@ class Point:
             The angle is measured clockwise from the line point_b->self to self->point_c.
         """
 
-        vector1 = Vector(self, point_b)
-        vector2 = Vector(self, point_c)
+        vector1=(point_b.get_proj_x() - self.get_proj_x(), point_b.get_proj_y() - self.get_proj_y())
+        
+        vector2=(point_c.get_proj_x() - self.get_proj_x(), point_c.get_proj_y() - self.get_proj_y())
 
         angle = math.degrees(
-            math.atan2(vector1.get_Y(), vector1.get_X()) - math.atan2(vector2.get_Y(), vector2.get_X())
+            math.atan2(vector1[1], vector1[0]) - math.atan2(vector2[1], vector2[0])
         )
         return (360 + angle) % 360
 
