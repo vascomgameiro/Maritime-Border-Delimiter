@@ -38,9 +38,9 @@ class Point:
         self.__longitude = longitude
         earth_radius = 6371009  # in meters
         lat_dist = math.pi * earth_radius / 180.0
-        self.__y = nautical(meters=self.get_latitude() * lat_dist)  # type: ignore
+        self.__y = nautical(meters=self.get_latitude() * lat_dist)  
         self.__x = nautical(
-            meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude()))  # type: ignore
+            meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude()))  
         )
 
     def get_proj_x(self) -> float:
@@ -558,8 +558,8 @@ class Delimitation:
                 max(p1.get_longitude(), p2.get_longitude()),
             ),
         )
-
-    def is_within_segment(
+    
+    def __is_within_segment(
         self, p1: Point, p2: Point, intersect_x: float, intersect_y: float
     ) -> bool:
         """
@@ -595,8 +595,8 @@ class Delimitation:
 
         intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()
 
-        is_within_first_segment = self.is_within_segment(p1, p2, intersect_x, intersect_y)
-        is_within_second_segment = self.is_within_segment(p3, p4, intersect_x, intersect_y)
+        is_within_first_segment = self.__is_within_segment(p1, p2, intersect_x, intersect_y)
+        is_within_second_segment = self.__is_within_segment(p3, p4, intersect_x, intersect_y)
 
         return is_within_first_segment and is_within_second_segment
 
@@ -654,13 +654,13 @@ class Delimitation:
 
             if self.intersects(p1=p3, p2=p4, p3=p1, p4=p2):
                 intersection = self.__intersection_point(p1=p3, p2=p4, p3=p1, p4=p2)
-                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()  # type: ignore
+                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()  
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
 
                 if (
-                    intersect_x == first_point.get_latitude()  # type: ignore
-                    and intersect_y == first_point.get_longitude()  # type: ignore
+                    intersect_x == first_point.get_latitude()  
+                    and intersect_y == first_point.get_longitude()  
                 ) or (
                     intersect_x == last_point.get_latitude()
                     and intersect_y == last_point.get_longitude()
@@ -712,8 +712,8 @@ class Delimitation:
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
                 ax.plot(
-                    [first_point.get_proj_x(), last_point.get_proj_x()],  # type: ignore
-                    [first_point.get_proj_y(), last_point.get_proj_y()],  # type: ignore
+                    [first_point.get_proj_x(), last_point.get_proj_x()],  
+                    [first_point.get_proj_y(), last_point.get_proj_y()], 
                     color="blue",
                     linewidth=1,
                 )
@@ -850,7 +850,7 @@ class FileHandler:
         """
         folium_map = folium.Map()
         points = self.__points.get_all_points()
-        coords = [(point.get_longitude(), point.get_latitude()) for point in points]
+        coords = [(point.get_latitude(), point.get_longitude()) for point in points]
 
         min_lat = self.__points.get_min_lat()
         min_lon = self.__points.get_min_lon()
@@ -861,20 +861,23 @@ class FileHandler:
         folium_map.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
 
         try:
-            for longitude, latitude in coords:
+            for latitude, longitude in coords:
                 folium.CircleMarker(location=[latitude, longitude], radius=2, weight=5).add_to(
                     folium_map
                 )
 
             if delimitation:
-                del_points = delimitation.get_points()
-                del_coordinates = [
-                    (del_point.get_latitude(), del_point.get_longitude())
-                    for del_point in del_points
-                ]
-                folium.PolyLine(locations=del_coordinates, color="blue", weight=2.5).add_to(
-                    folium_map
-                )
+                if delimitation.size() > 0:
+                    del_points = delimitation.get_points()
+                    del_coordinates = [
+                        (del_point.get_latitude(), del_point.get_longitude())
+                        for del_point in del_points
+                    ]
+                    del_coordinates.append((delimitation.get_first().get_latitude(), 
+                                            delimitation.get_first().get_longitude()))
+                    folium.PolyLine(locations=del_coordinates, color="red", weight=2.5).add_to(
+                        folium_map
+                    )
 
             self.__filename = f"map_{time.time()}.html"
             folium_map.save(self.__filename)
