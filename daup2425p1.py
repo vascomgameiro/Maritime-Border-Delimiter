@@ -38,9 +38,9 @@ class Point:
         self.__longitude = longitude
         earth_radius = 6371009  # in meters
         lat_dist = math.pi * earth_radius / 180.0
-        self.__y = nautical(meters=self.get_latitude() * lat_dist)  
+        self.__y = nautical(meters=self.get_latitude() * lat_dist)
         self.__x = nautical(
-            meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude()))  
+            meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude()))
         )
 
     def get_proj_x(self) -> float:
@@ -356,11 +356,7 @@ class Delimitation:
     points.
 
     Attributes:
-        __points (list): A list that stores all the points in the order they are added.
-        __first_point (Point or None): The first point added to the Delimitation.
-        __third_last_point (Point or None): The third-to-last point added to the Delimitation.
-        __second_last_point (Point or None): The second-to-last point added to the Delimitation.
-        __last_point (Point or None): The last point added to the Delimitation.
+        __points (list): A List that stores all the points in the order they are added.
 
     Methods:
         add_point(Point): Adds a point to the Delimitation and updates relevant attributes.
@@ -382,10 +378,6 @@ class Delimitation:
         Complexity: O(1)
         """
         self.__points = []
-        self.__first_point = None
-        self.__last_point = None
-        self.__second_last_point = None
-        self.__third_last_point = None
 
     def get_points(self) -> list:
         """
@@ -406,7 +398,7 @@ class Delimitation:
 
         Complexity: O(1)
         """
-        return self.__first_point
+        return self.__points[0] if self.size() > 0 else None
 
     def get_last_two(self) -> tuple:
         """
@@ -417,7 +409,11 @@ class Delimitation:
 
         Complexity: O(1)
         """
-        return (self.__second_last_point, self.__last_point)
+        if self.size() == 0:
+            return (None, None)
+        elif self.size() == 1:
+            return (None, self.__points[-1])
+        return (self.__points[-2], self.__points[-1])
 
     def get_area(self) -> float:
         """
@@ -491,13 +487,6 @@ class Delimitation:
         if not isinstance(point, Point):
             raise ValueError("Only Point objects can be added to the Delimitation object")
         if point not in self.get_points():
-            if self.size() > 0:
-                self.__third_last_point = self.__second_last_point
-                self.__second_last_point = self.__last_point
-            else:
-                self.__first_point = point
-    
-            self.__last_point = point
             self.__points.append(point)
 
     def pop_point(self) -> Point:
@@ -511,9 +500,6 @@ class Delimitation:
         """
         if self.size() == 0:
             raise IndexError("Cannot remove point from an empty delimitation.")
-
-        self.__second_last_point = self.__third_last_point
-        self.__last_point = self.__second_last_point
         return self.__points.pop()
 
     def copy(self) -> "Delimitation":
@@ -558,7 +544,7 @@ class Delimitation:
                 max(p1.get_longitude(), p2.get_longitude()),
             ),
         )
-    
+
     def __is_within_segment(
         self, p1: Point, p2: Point, intersect_x: float, intersect_y: float
     ) -> bool:
@@ -654,13 +640,13 @@ class Delimitation:
 
             if self.intersects(p1=p3, p2=p4, p3=p1, p4=p2):
                 intersection = self.__intersection_point(p1=p3, p2=p4, p3=p1, p4=p2)
-                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()  
+                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
 
                 if (
-                    intersect_x == first_point.get_latitude()  
-                    and intersect_y == first_point.get_longitude()  
+                    intersect_x == first_point.get_latitude()
+                    and intersect_y == first_point.get_longitude()
                 ) or (
                     intersect_x == last_point.get_latitude()
                     and intersect_y == last_point.get_longitude()
@@ -712,8 +698,8 @@ class Delimitation:
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
                 ax.plot(
-                    [first_point.get_proj_x(), last_point.get_proj_x()],  
-                    [first_point.get_proj_y(), last_point.get_proj_y()], 
+                    [first_point.get_proj_x(), last_point.get_proj_x()],
+                    [first_point.get_proj_y(), last_point.get_proj_y()],
                     color="blue",
                     linewidth=1,
                 )
@@ -829,12 +815,12 @@ class FileHandler:
         valid_points = []
         open_file = open(self.__filename, "r", encoding="utf-8")
         if open_file:
-                for line in open_file:
-                    items = line.split()
-                    valid_points.append(Point(items[0], float(items[1]), float(items[2])))
+            for line in open_file:
+                items = line.split()
+                valid_points.append(Point(items[0], float(items[1]), float(items[2])))
         else:
             print(f"Error opening file {self.__filename}")
-        
+
         open_file.close()
         return ValidPoints(valid_points)
 
@@ -873,8 +859,12 @@ class FileHandler:
                     (del_point.get_latitude(), del_point.get_longitude())
                     for del_point in del_points
                 ]
-                del_coordinates.append((delimitation.get_first().get_latitude(), 
-                                        delimitation.get_first().get_longitude()))
+                del_coordinates.append(
+                    (
+                        delimitation.get_first().get_latitude(),
+                        delimitation.get_first().get_longitude(),
+                    )
+                )
                 folium.PolyLine(locations=del_coordinates, color="red", weight=2.5).add_to(
                     folium_map
                 )
@@ -930,14 +920,12 @@ def main():
             file_handler = FileHandler(file_name)
             print(f"Points from {file_name} imported successfully.")
 
-
         elif cmd == "make_map":
             if file_handler is None:
                 print("Error: No points imported. Please use 'import_points' first.")
                 continue
             file_handler.make_map()
             print("Map created successfully.")
-
 
         elif cmd == "quit":
             print("Exiting the program.")
@@ -948,4 +936,5 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
     main()
