@@ -490,15 +490,15 @@ class Delimitation:
         """
         if not isinstance(point, Point):
             raise ValueError("Only Point objects can be added to the Delimitation object")
-
-        if self.size() > 0:
-            self.__third_last_point = self.__second_last_point
-            self.__second_last_point = self.__last_point
-        else:
-            self.__first_point = point
-
-        self.__last_point = point
-        self.__points.append(point)
+        if point not in self.get_points():
+            if self.size() > 0:
+                self.__third_last_point = self.__second_last_point
+                self.__second_last_point = self.__last_point
+            else:
+                self.__first_point = point
+    
+            self.__last_point = point
+            self.__points.append(point)
 
     def pop_point(self) -> Point:
         """
