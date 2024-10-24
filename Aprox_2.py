@@ -41,6 +41,7 @@ class AproxOptimalDelimitation:
                 distance = point1.distance(point2)
                 if distance <= self.__max_distance:
                     self.__graph.add_edge(point1, point2, weight=distance)
+                    self.__graph.add_edge(point2, point1, weight=distance)
 
     def get_adjacency_list(self):
         """
@@ -56,18 +57,28 @@ class AproxOptimalDelimitation:
 
         Complexity: O(N)
         """
+
+        self.build_graph()
         adjacency_list = {}
         invalid_points = set()
+        aux = dict()
+
+        # find invalid points (points with less than 2 connections)
+        for vertex in self.__graph:
+            point: Point = vertex.get_key()  # Point object (this vertex)
+            connections = len(
+                [conn.get_key() for conn in vertex.get_neighbors() if conn.get_key().get_id() not in invalid_points]
+            )
+            aux[point.get_id()] = connections
+            if connections < 2:
+                invalid_points.add(point.get_id())
 
         for vertex in self.__graph:
             point: Point = vertex.get_key()  # Point object (this vertex)
-            connections: List[Point] = [
+            connections = [
                 conn.get_key() for conn in vertex.get_neighbors() if conn.get_key() not in invalid_points
             ]  # Neighbour points
-
-            if len(connections) == 1:
-                invalid_points.add(point)
-            elif len(connections) > 1:
+            if len(connections) > 1:
                 adjacency_list[point.get_id()] = connections
 
         return adjacency_list
@@ -85,8 +96,6 @@ class AproxOptimalDelimitation:
         Returns:
             Delimitation: The constructed delimitation connecting the points in an optimal manner.
         """
-
-        self.build_graph()
         adjacency_data = self.get_adjacency_list()
 
         non_visited_points: List[Point] = [
@@ -97,18 +106,12 @@ class AproxOptimalDelimitation:
         delimitation = Delimitation()
         delimitation.add_point(start_point)
 
-        current_point: Point = start_point
-        reference_point = Point("ref", start_point.get_latitude() - 1, start_point.get_longitude() - 1)
-
-        angle_dictionary = dict()
-        for point in non_visited_points:
-            angle = start_point.get_forward_angle(reference_point, point)
-            angle_dictionary[point] = angle
-
-        angle_dictionary.pop(start_point)
         while True:
             if delimitation.size() > 1:
                 reference_point, current_point = delimitation.get_last_two()
+            if delimitation.size() == 1 and len(non_visited_points) > 1:
+                _, current_point = delimitation.get_last_two()
+                reference_point = Point("ref", start_point.get_latitude() - 1, start_point.get_longitude() - 1)
 
             if not non_visited_points:
                 return Delimitation()
@@ -118,8 +121,9 @@ class AproxOptimalDelimitation:
             )
 
             if next_point is None:
-                non_visited_points.remove(current_point)
                 delimitation.pop_point()
+                adjacency_data.pop(current_point.get_id())
+                non_visited_points.remove(current_point)
 
             else:
                 delimitation.add_point(next_point)
@@ -152,7 +156,12 @@ class AproxOptimalDelimitation:
         candidate_points = [
             point
             for point in non_visited_points
-            if (point in adjacency_data[current_point.get_id()] and point.get_id() in adjacency_data)
+            if (
+                point in adjacency_data[current_point.get_id()]
+                and point.get_id() in adjacency_data
+                and point != current_point
+                and point != reference_point
+            )
         ]
 
         if len(candidate_points) == 1:
@@ -167,3 +176,6 @@ class AproxOptimalDelimitation:
                 next_point = point
 
         return next_point
+
+    def get_graph(self):
+        return self.__graph
