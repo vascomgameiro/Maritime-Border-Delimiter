@@ -4,11 +4,13 @@ This module contains classes and methods for processing geographical points and 
 
 import math
 import time
+from datetime import datetime
 
 import folium
 import matplotlib.pyplot as plt
 from geopy.distance import geodesic
 from geopy.units import nautical
+from pythonds3 import Graph, Vertex
 
 
 class Point:
@@ -38,10 +40,8 @@ class Point:
         self.__longitude = longitude
         earth_radius = 6371009  # in meters
         lat_dist = math.pi * earth_radius / 180.0
-        self.__y = nautical(meters=self.get_latitude() * lat_dist)
-        self.__x = nautical(
-            meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude()))
-        )
+        self.__y = nautical(meters=self.get_latitude() * lat_dist)  # type: ignore
+        self.__x = nautical(meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude())))  # type: ignore
 
     def get_proj_x(self) -> float:
         """
@@ -170,9 +170,7 @@ class Point:
             point_c.get_proj_y() - self.get_proj_y(),
         )
 
-        angle = math.degrees(
-            math.atan2(vector1[1], vector1[0]) - math.atan2(vector2[1], vector2[0])
-        )
+        angle = math.degrees(math.atan2(vector1[1], vector1[0]) - math.atan2(vector2[1], vector2[0]))
         return (360 + angle) % 360
 
     def __repr__(self) -> str:
@@ -221,7 +219,7 @@ class Point:
             O(1)
         """
         return hash((self.__id, self.__latitude, self.__longitude))
-    
+
     def __str__(self):
         """
         Returns the string representation of the Point object.
@@ -524,9 +522,7 @@ class Delimitation:
         points = self.get_points()
 
         for i in range(self.size()):
-            point_copy = Point(
-                points[i].get_id(), points[i].get_latitude(), points[i].get_longitude()
-            )
+            point_copy = Point(points[i].get_id(), points[i].get_latitude(), points[i].get_longitude())
             delimitation_copy.add_point(point_copy)
 
         return delimitation_copy
@@ -555,9 +551,7 @@ class Delimitation:
             ),
         )
 
-    def __is_within_segment(
-        self, p1: Point, p2: Point, intersect_x: float, intersect_y: float
-    ) -> bool:
+    def __is_within_segment(self, p1: Point, p2: Point, intersect_x: float, intersect_y: float) -> bool:
         """
         This static method determines whether a point is within a segment formed by two other points.
 
@@ -650,16 +644,12 @@ class Delimitation:
 
             if self.intersects(p1=p3, p2=p4, p3=p1, p4=p2):
                 intersection = self.__intersection_point(p1=p3, p2=p4, p3=p1, p4=p2)
-                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()
+                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()  # type: ignore
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
 
-                if (
-                    intersect_x == first_point.get_latitude()
-                    and intersect_y == first_point.get_longitude()
-                ) or (
-                    intersect_x == last_point.get_latitude()
-                    and intersect_y == last_point.get_longitude()
+                if (intersect_x == first_point.get_latitude() and intersect_y == first_point.get_longitude()) or (  # type: ignore
+                    intersect_x == last_point.get_latitude() and intersect_y == last_point.get_longitude()  # type: ignore
                 ):
                     continue
                 return True
@@ -708,12 +698,12 @@ class Delimitation:
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
                 ax.plot(
-                    [first_point.get_proj_x(), last_point.get_proj_x()],
-                    [first_point.get_proj_y(), last_point.get_proj_y()],
+                    [first_point.get_proj_x(), last_point.get_proj_x()],  # type: ignore
+                    [first_point.get_proj_y(), last_point.get_proj_y()],  # type: ignore
                     color="blue",
                     linewidth=1,
                 )
-            
+
         ax.set_title("Delimitation")
         ax.set_xlabel("Latitude")
         ax.set_ylabel("Longitude")
@@ -765,10 +755,10 @@ class Delimitation:
                 return True
 
         return False
-    
+
     def is_valid_delimitation(self, valid_points: ValidPoints, distance: int) -> bool:
         """
-        Validates if the current delimitation formed by the points of the object is 
+        Validates if the current delimitation formed by the points of the object is
         valid based on a set of conditions.
 
         Parameters: valid_points(ValidPoints), distance(int)
@@ -782,23 +772,26 @@ class Delimitation:
         v_p_points = valid_points.get_all_points()
         if set(del_points).issubset(set(v_p_points)):
             for i in range(self.size() - 1):
-                if del_points[i].distance(del_points[i+1]) <= distance and del_points[0].distance(del_points[-1]) <= distance:
+                if (
+                    del_points[i].distance(del_points[i + 1]) <= distance
+                    and del_points[0].distance(del_points[-1]) <= distance
+                ):
                     continue
                 else:
                     return False
             for i in range(len(del_points)):
                 p1 = del_points[i]
-                p2 = del_points[(i + 1) % len(del_points)] 
+                p2 = del_points[(i + 1) % len(del_points)]
 
                 for j in range(len(del_points)):
                     if j == i or (j + 1) % len(del_points) == i or (j == (i + 1) % len(del_points)):
-                        continue 
-                    
+                        continue
+
                     p3 = del_points[j]
-                    p4 = del_points[(j + 1) % len(del_points)]  
-                    
+                    p4 = del_points[(j + 1) % len(del_points)]
+
                     if self.intersects(p1, p2, p3, p4):
-                        return False  
+                        return False
 
             return True
         return False
@@ -813,7 +806,7 @@ class Delimitation:
         """
         points_repr = ", ".join([repr(point) for point in self.get_points()])
         return f"Delimitation([{points_repr}])"
-    
+
     def __str__(self):
         """
         Returns a string representation of the object
@@ -824,6 +817,206 @@ class Delimitation:
         """
         points_repr = ", ".join([repr(point) for point in self.get_points()])
         return f"[{points_repr}]"
+
+
+class ConvexHull:
+    """
+    A class to calculate the convex hull from a set of valid points.
+
+    The convex hull is the smallest convex shape that encloses a set of points.
+    This class uses the orientation method to find the hull by iterating over the points,
+    ensuring that only those points that form part of the hull are retained.
+
+    Attributes:
+        __points (ValidPoints): The set of valid points from which the convex hull is calculated.
+
+    Methods:
+    find_delimitation():Returns the convex hull (delimitation) for the given set of points.
+    """
+
+    def __init__(self, valid_points: ValidPoints):
+        """
+        Initializes the ConvexHull class with a set of valid points.
+
+        Args:
+            valid_points (ValidPoints): An instance containing the points from which the convex hull is to be computed.
+
+        Complexity: O(1)
+        """
+        self.__points = valid_points
+
+    @staticmethod
+    def __orientation(p1: Point, p2: Point, p3: Point) -> int:
+        """
+        Determines the orientation of the triplet (p1, p2, p3).
+
+        Given three points, the method calculates the orientation to decide if the triplet forms a clockwise,
+        counterclockwise, or collinear angle. This helps in determining whether to add or discard a point when
+        forming the convex hull.
+
+        Args:
+            p1 (Point): The first point of the triplet (previous point in the sequence).
+            p2 (Point): The second point of the triplet (current point being evaluated).
+            p3 (Point): The third point of the triplet (next point in the sequence).
+
+        Returns:
+            int:
+                - 0 if the points are collinear,
+                - 1 if they are in clockwise orientation,
+                - 2 if they are in counterclockwise orientation.
+
+        Complexity: O(1)
+        """
+        val = (p2.get_longitude() - p1.get_longitude()) * (p3.get_latitude() - p2.get_latitude()) - (
+            p2.get_latitude() - p1.get_latitude()
+        ) * (p3.get_longitude() - p2.get_longitude())
+
+        if val == 0:
+            return 0  # collinear
+        elif val > 0:
+            return 1  # clockwise
+        else:
+            return 2  # counterclockwise
+
+    def find_delimitation(self) -> Delimitation:
+        """
+        Finds and returns the convex hull (delimitation) for the given set of points.
+
+        This method initializes the delimitation process by finding the starting point with the lowest y-coordinate,
+        and then iterates over the remaining points, using the orientation method to decide whether to add or remove points.
+
+        Points are added or removed based on their angular orientation relative to the last two points in the hull.
+
+        Returns:
+            Delimitation: The object containing the points that make up the convex hull.
+
+        Complexity: O(plog(p)), p being the number of points in the Delimitation object
+        """
+        d = Delimitation()
+        points = self.__points.get_all_points()
+        dictionary1 = dict()
+
+        start = min(points, key=lambda p: p.get_longitude())
+
+        for i in range(self.__points.get_size()):
+            ponto_ref = Point("ref", start.get_latitude() - 1, start.get_longitude() - 1)
+            angle = start.get_forward_angle(ponto_ref, points[i])
+            dictionary1[points[i]] = angle
+
+        dictionary1.pop(start)
+        sorted_points = sorted(dictionary1, key=dictionary1.get)  # type: ignore
+
+        d.add_point(start)
+
+        while len(sorted_points) > 0:
+            if d.size() < 2:
+                d.add_point(sorted_points[0])
+                sorted_points.pop(0)
+                continue
+
+            (p2, p3) = d.get_last_two()
+
+            curr_point = sorted_points[0]
+            orientation_result = self.__orientation(p2, p3, curr_point)
+
+            if orientation_result == 1:
+                d.pop_point()
+            else:
+                d.add_point(curr_point)
+                sorted_points.pop(0)
+
+        return d
+
+
+class OptimalDelimitation:
+    """
+    The OptimalDelimitation class is responsible for finding the delimitation with the maximum area
+    from a set of valid points, given a distance constraint. It builds a graph of points and uses
+    Depth-First Search (DFS) to explore all possible delimitations (polygonal shapes), storing valid
+    delimitations by their calculated area. The delimitation with the maximum area is returned.
+
+    Attributes:__distance : int,  __valid_points : ValidPoints
+
+    Methods: find_delimitation(): Returns the optimal delimitation (Delimitation) for the given set of points.
+    """
+
+    def __init__(self, valid_points: ValidPoints, distance: int):
+        """
+        This method initializes an OptimalDelimitation object.
+
+        Arguments: valid_points(ValidPoints), distance (int)
+
+        Complexity: O(1)
+        """
+        self.__distance = distance
+        self.__valid_points = valid_points
+
+    def __dfs(self, current_vertex: Vertex, delimitation: Delimitation, area_registry: dict, visited: set):
+        """
+        Performs a Depth-First Search (DFS) traversal starting from the given vertex, building
+        possible delimitations and calculating their areas. The valid delimitations are stored
+        in `area_registry`.
+
+        Arguments: current_vertex: The vertex from which DFS is initiated (a Vertex object).
+                   delimitation: A Delimitation object that tracks the sequence of points in the current path.
+                   area_registry: A Dictionary to store valid delimitation areas mapped to the corresponding Delimitation object.
+                   visited: A Set to track visited vertices during the DFS traversal.
+
+        Complexity: O(v+e+v*p), v being the number of vertices, e being the number of edges and p being the number of
+        points in the delimitation object
+        """
+        visited.add(current_vertex)
+        if current_vertex.get_neighbors() is not None:
+            for next_vertex in current_vertex.get_neighbors():
+                if next_vertex not in visited:
+                    delimitation.add_point(next_vertex.get_key())
+                    if delimitation.size() >= 3:
+                        try:
+                            total_area = delimitation.get_area()
+                            area_registry[total_area] = delimitation.copy()
+                        except ValueError:
+                            continue
+                    self.__dfs(next_vertex, delimitation, area_registry, visited)
+                    if delimitation.size() > 0:
+                        delimitation.pop_point()
+            visited.remove(current_vertex)
+
+    def find_delimitation(self) -> Delimitation:
+        """
+        Finds and returns the delimitation with the maximum area by building a graph of points and performing DFS.
+
+        The method constructs a graph where points are vertices and edges represent the valid connections
+        between points based on the distance threshold. DFS is performed on each point, and the valid
+        delimitations are stored. The delimitation with the maximum area is returned.
+
+        Returns: Delimitation object
+
+        Complexity: O(p^2(1+vd)), p being the number of vertices in the graph and vd being the number of valid
+        Delimitation objects
+
+        """
+        area_registry = dict()
+        points = self.__valid_points.get_all_points()
+        g = Graph()
+        for i in range(self.__valid_points.get_size()):
+            neigbors = self.__valid_points.get_points_vicinity(points[i], self.__distance)
+            for neighbor in neigbors:
+                if points[i] != neighbor:
+                    g.add_edge(points[i], neighbor, points[i].distance(neighbor))
+
+        for vertex_key in g.get_vertices():
+            visited = set()
+            d = Delimitation()
+            d.add_point(vertex_key)  # type: ignore
+            self.__dfs(g.get_vertex(vertex_key), d, area_registry, visited)  # type: ignore
+
+        valid_area_registry = {
+            area: delimitation
+            for area, delimitation in area_registry.items()
+            if delimitation.is_valid_delimitation(self.__valid_points, self.__distance)
+        }
+        maximum = max(valid_area_registry)
+        return area_registry[maximum]
 
 
 class FileHandler:
@@ -906,26 +1099,19 @@ class FileHandler:
         folium_map.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
 
         for latitude, longitude in coords:
-            folium.CircleMarker(location=[latitude, longitude], radius=2, weight=5).add_to(
-                folium_map
-            )
+            folium.CircleMarker(location=[latitude, longitude], radius=2, weight=5).add_to(folium_map)
 
         if delimitation:
             if delimitation.size() > 0:
                 del_points = delimitation.get_points()
-                del_coordinates = [
-                    (del_point.get_latitude(), del_point.get_longitude())
-                    for del_point in del_points
-                ]
+                del_coordinates = [(del_point.get_latitude(), del_point.get_longitude()) for del_point in del_points]
                 del_coordinates.append(
                     (
                         delimitation.get_first().get_latitude(),
                         delimitation.get_first().get_longitude(),
                     )
                 )
-                folium.PolyLine(locations=del_coordinates, color="red", weight=2.5).add_to(
-                    folium_map
-                )
+                folium.PolyLine(locations=del_coordinates, color="red", weight=2.5).add_to(folium_map)
 
         self.__filename = f"map_{time.time()}.html"
         folium_map.save(self.__filename)
@@ -943,18 +1129,17 @@ class FileHandler:
 
 def main():
     """
-    This is the main function of the program. It will continuously prompt the user for input commands.
-
-    The commands available are:
-
-    - import_points <file_name>: imports points from a file and store them in the FileHandler object.
-    - make_map: creates a map based on the points stored in the FileHandler object.
-    - quit: exits the program.
-
-    The program will print an error message if the command is not recognized.
-    :return: None
+    Main function of the program, which will continuously prompt the user for input commands.
+    Commands available are:
+    - import_points <file_name>
+    - draw_hull
+    - draw_optimal_delimitation <max_distance>
+    - draw_approx_delimitation <max_distance>
+    - make_map
+    - quit
     """
     file_handler = None
+    delimitation = None
 
     while True:
         command = input("?> ").strip().split()
@@ -968,29 +1153,97 @@ def main():
                 continue
             file_name = command[1]
 
-            open_file = open(file_name, "r", encoding="utf-8")
-            if open_file:
-                open_file.close()
-            else:
-                print(f"Error: Unable to open file '{file_name}'")
+            try:
+                start_time = time.time()
+                file_handler = FileHandler(file_name)
+                num_points = file_handler.read_points().get_size()
+                elapsed_time = (time.time() - start_time) * 1000
+                print(f"Size: {num_points}")
+                print(f"Time: {elapsed_time:.2f}")
+            except Exception as e:
+                print(f"Error: {e}")
                 continue
 
-            file_handler = FileHandler(file_name)
-            print(f"Points from {file_name} imported successfully.")
-
-        elif cmd == "make_map":
+        elif cmd == "draw_hull":
             if file_handler is None:
                 print("Error: No points imported. Please use 'import_points' first.")
                 continue
-            file_handler.make_map()
-            print("Map created successfully.")
+            try:
+                start_time = time.time()
+                delimitation = ConvexHull(file_handler.read_points()).find_delimitation()
+                area = delimitation.get_area()
+                elapsed_time = (time.time() - start_time) * 1000
+
+                print("Type: Convex Hull")
+                print(f"Line: {delimitation}")
+                print(f"Area: {area:.2f}")
+                print(f"Time: {elapsed_time:.2f}")
+            except Exception as e:
+                print(f"Error: {e}")
+
+        elif cmd == "draw_optimal_delimitation":
+            if len(command) < 2:
+                print("Error: missing max distance argument.")
+                continue
+            if file_handler is None:
+                print("Error: No points imported. Please use 'import_points' first.")
+                continue
+            try:
+                max_distance = int(command[1])
+                start_time = time.time()
+                delimitation = OptimalDelimitation(file_handler.read_points(), max_distance).find_delimitation()
+                elapsed_time = (time.time() - start_time) * 1000
+                area = delimitation.get_area()
+                print("Type: Optimal Delimitation")
+                print(f"Line: {delimitation}")
+                print(f"Area: {area:.2f}")
+                print(f"Time: {elapsed_time:.2f}")
+            except Exception as e:
+                print(f"Error: {e}")
+        # TODO: Implement approximate delimitation
+        # elif cmd == "draw_approx_delimitation":
+        #     if len(command) < 2:
+        #         print("Error: missing max distance argument.")
+        #         continue
+        #     if file_handler is None:
+        #         print("Error: No points imported. Please use 'import_points' first.")
+        #         continue
+        #     try:
+        #         max_distance = int(command[1])
+        #         start_time = time.time()
+        #         delimitation = ApproximateDelimitation(file_handler.read_points(), max_distance)
+        #         elapsed_time = (time.time() - start_time) * 1000
+        #         area = delimitation.calculate_area()
+        #         print("Type: Approximate Delimitation")
+        #         print(f"Line: {delimitation}")
+        #         print(f"Area: {area:.2f}")
+        #         print(f"Time: {elapsed_time:.2f}")
+        #     except Exception as e:
+        #         print(f"Error: {e}")
+
+        elif cmd == "make_map":
+            if file_handler is None or delimitation is None:
+                print("Error: No points or delimitation available.")
+                continue
+            try:
+                start_time = time.time()
+                timestamp = datetime.now().timestamp()
+                file_name = f"map_{timestamp}.html"
+                file_handler.make_map(delimitation)
+                elapsed_time = (time.time() - start_time) * 1000
+                print(f"Map: {file_name}")
+                print(f"Time: {elapsed_time:.2f}")
+            except Exception as e:
+                print(f"Error: {e}")
 
         elif cmd == "quit":
-            print("Exiting the program.")
+            print("Done!")
             break
 
         else:
-            print(f"Unknown command: {cmd}. Valid Commands: import_points, make_map, quit")
+            print(
+                f"Unknown command: {cmd}. Valid Commands: import_points, draw_hull, draw_optimal_delimitation <max_distance>, draw_approx_delimitation <max_distance>, make_map, quit"
+            )
 
 
 if __name__ == "__main__":

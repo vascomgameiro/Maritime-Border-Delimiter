@@ -232,7 +232,7 @@ class ValidPoints:
 
     Methods:
         - get_size: Returns the number of points stored.
-        - get_min_lat, get_max_lat, get_min_lon, get_max_lon: Return the min/max latitude/longitude.
+        - get_min_lat, get_max_lat, get_min_lon, get_max_lon: Return the min/masx latitude/longitude.
         - get_all_points: Returns all the points stored.
         - get_points_vicinity: Returns the set of points within a given distance from a specified point.
     """
@@ -936,5 +936,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     main()

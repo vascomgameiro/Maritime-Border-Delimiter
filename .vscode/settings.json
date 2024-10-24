@@ -1,5 +1,5 @@
 {
-    "ruff.lineLength": 100,
+    "ruff.lineLength": 120,
     "python.testing.pytestArgs": [
         "."
     ],
