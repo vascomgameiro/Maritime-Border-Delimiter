@@ -758,40 +758,38 @@ class Delimitation:
 
     def is_valid_delimitation(self, valid_points: ValidPoints, distance: int) -> bool:
         """
-        Validates if the current delimitation formed by the points of the object is
+        Validates if the current delimitation formed by the points of the object is 
         valid based on a set of conditions.
 
         Parameters: valid_points(ValidPoints), distance(int)
 
         Returns: bool
 
-        Complexity: O(p^2+v), p being being the number of points in the Delimitation object
-        and v being the number of points in the ValidPoints object
+        Complexity: O(p^2), p being being the number of points in the Delimitation object
         """
         del_points = self.get_points()
         v_p_points = valid_points.get_all_points()
         if set(del_points).issubset(set(v_p_points)):
+            if self.get_first().distance(self.get_last_two()[1]) > distance:
+                return False
             for i in range(self.size() - 1):
-                if (
-                    del_points[i].distance(del_points[i + 1]) <= distance
-                    and del_points[0].distance(del_points[-1]) <= distance
-                ):
+                if del_points[i].distance(del_points[i+1]) <= distance:
                     continue
                 else:
                     return False
             for i in range(len(del_points)):
                 p1 = del_points[i]
-                p2 = del_points[(i + 1) % len(del_points)]
+                p2 = del_points[(i + 1) % len(del_points)] 
 
                 for j in range(len(del_points)):
                     if j == i or (j + 1) % len(del_points) == i or (j == (i + 1) % len(del_points)):
-                        continue
-
+                        continue 
+                    
                     p3 = del_points[j]
-                    p4 = del_points[(j + 1) % len(del_points)]
-
+                    p4 = del_points[(j + 1) % len(del_points)]  
+                    
                     if self.intersects(p1, p2, p3, p4):
-                        return False
+                        return False  
 
             return True
         return False
