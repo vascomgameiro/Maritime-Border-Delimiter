@@ -184,8 +184,8 @@ class Point:
         Complexity:
             O(1)
         """
-        return f"Point {self.get_id()} ({self.get_latitude()}, {self.get_longitude()})"
-
+        return f"('{self.get_id()}', {self.get_latitude()}, {self.get_longitude()})"
+    
     def __eq__(self, other: "Point") -> bool:
         """
         Checks if this point is equal to another point.
@@ -229,7 +229,7 @@ class Point:
 
         Complexity: O(1)
         """
-        return f"({self.get_id()}, {self.get_latitude()}, {self.get_longitude()})"
+        return f"('{self.get_id()}', {self.get_latitude()}, {self.get_longitude()})"
 
 
 class ValidPoints:
@@ -796,7 +796,7 @@ class Delimitation:
             return True
         return False
 
-    def __is_point_inside(self, point: Point) -> bool:
+    def is_point_inside(self, point: Point) -> bool:
         """
         Determines if a given point is inside the polygon formed by the delimitation points.
 
@@ -1231,7 +1231,7 @@ class ApproxDelimitation:
         used_points.update(
             point
             for point in self.__valid_points.get_all_points()
-            if point in max_delim.get_points() or max_delim.__is_point_inside(point)
+            if point in max_delim.get_points() or max_delim.is_point_inside(point)
         )
 
         # Reset delimitation and start point for the new cycle
