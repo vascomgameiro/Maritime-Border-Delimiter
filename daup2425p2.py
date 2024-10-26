@@ -758,7 +758,7 @@ class Delimitation:
 
     def is_valid_delimitation(self, valid_points: ValidPoints, distance: int) -> bool:
         """
-        Validates if the current delimitation formed by the points of the object is 
+        Validates if the current delimitation formed by the points of the object is
         valid based on a set of conditions.
 
         Parameters: valid_points(ValidPoints), distance(int)
@@ -773,26 +773,59 @@ class Delimitation:
             if self.get_first().distance(self.get_last_two()[1]) > distance:
                 return False
             for i in range(self.size() - 1):
-                if del_points[i].distance(del_points[i+1]) <= distance:
+                if del_points[i].distance(del_points[i + 1]) <= distance:
                     continue
                 else:
                     return False
             for i in range(len(del_points)):
                 p1 = del_points[i]
-                p2 = del_points[(i + 1) % len(del_points)] 
+                p2 = del_points[(i + 1) % len(del_points)]
 
                 for j in range(len(del_points)):
                     if j == i or (j + 1) % len(del_points) == i or (j == (i + 1) % len(del_points)):
-                        continue 
-                    
+                        continue
+
                     p3 = del_points[j]
-                    p4 = del_points[(j + 1) % len(del_points)]  
-                    
+                    p4 = del_points[(j + 1) % len(del_points)]
+
                     if self.intersects(p1, p2, p3, p4):
-                        return False  
+                        return False
 
             return True
         return False
+
+    def is_point_inside(self, point: Point) -> bool:
+        """
+        Determines if a given point is inside the polygon formed by the delimitation points.
+
+        Args:
+            point (Point): The point to check.
+
+        Returns:
+            bool: True if the point is inside the polygon, False otherwise.
+        """
+        n = len(self.get_points())
+        if n < 3:
+            return False  # A polygon must have at least 3 points
+
+        x, y = point.get_longitude(), point.get_latitude()
+        inside = False
+
+        # Iterate through each edge of the polygon
+        for i in range(n):
+            p1 = self.get_points()[i]
+            p2 = self.get_points()[(i + 1) % n]
+
+            x1, y1 = p1.get_longitude(), p1.get_latitude()
+            x2, y2 = p2.get_longitude(), p2.get_latitude()
+
+            # Check if point is within y-range of edge and adjust ray crossing
+            if (y1 > y) != (y2 > y):
+                x_intersection = (x2 - x1) * (y - y1) / (y2 - y1) + x1
+                if x < x_intersection:
+                    inside = not inside
+
+        return inside
 
     def __repr__(self) -> str:
         """
@@ -929,14 +962,15 @@ class ConvexHull:
 class OptimalDelimitation:
     """
     The OptimalDelimitation class is responsible for finding the delimitation with the maximum area
-    from a set of valid points, given a distance constraint. It builds a graph of points and uses 
-    Depth-First Search (DFS) to explore all possible delimitations (polygonal shapes), storing valid 
+    from a set of valid points, given a distance constraint. It builds a graph of points and uses
+    Depth-First Search (DFS) to explore all possible delimitations (polygonal shapes), storing valid
     delimitations by their calculated area. The delimitation with the maximum area is returned.
 
     Attributes:__distance : int,  __valid_points : ValidPoints
 
-    Methods: find_delimitation(): Returns the optimal delimitation (Delimitation) for the given set of points. 
+    Methods: find_delimitation(): Returns the optimal delimitation (Delimitation) for the given set of points.
     """
+
     def __init__(self, valid_points: ValidPoints, distance: int):
         """
         This method initializes an OptimalDelimitation object.
@@ -948,7 +982,6 @@ class OptimalDelimitation:
         self.__distance = distance
         self.__valid_points = valid_points
 
-    
     def __dfs_visit(self, current_vertex: Vertex, delimitation: Delimitation, area_registry: dict):
         """
         Performs a Depth-First Search (DFS) traversal starting from the given vertex, building
@@ -963,12 +996,12 @@ class OptimalDelimitation:
         current_vertex.color = "grey"
         for next_vertex in current_vertex.get_neighbors():
             if next_vertex.color == "white":
-                delimitation.add_point(next_vertex.get_key())  
-                if delimitation.size() >= 3: 
+                delimitation.add_point(next_vertex.get_key())
+                if delimitation.size() >= 3:
                     try:
                         total_area = delimitation.get_area()
                         area_registry[total_area] = delimitation.copy()
-                    except ValueError: 
+                    except ValueError:
                         delimitation.pop_point()
                         continue
                 self.__dfs_visit(next_vertex, delimitation, area_registry)
@@ -976,14 +1009,12 @@ class OptimalDelimitation:
                     delimitation.pop_point()
         current_vertex.color = "white"
 
-
-    
     def find_delimitation(self) -> Delimitation:
         """
         Finds and returns the delimitation with the maximum area by building a graph of points and performing DFS.
 
         The method constructs a graph where points are vertices and edges represent the valid connections
-        between points based on the distance threshold. DFS is performed on each point, and the valid 
+        between points based on the distance threshold. DFS is performed on each point, and the valid
         delimitations are stored. The delimitation with the maximum area is returned.
 
         Returns: Delimitation object
@@ -992,23 +1023,27 @@ class OptimalDelimitation:
 
         """
         area_registry = dict()
-        points = self.__valid_points.get_all_points()        
+        points = self.__valid_points.get_all_points()
         g = Graph()
         for i in range(self.__valid_points.get_size()):
             neigbors = self.__valid_points.get_points_vicinity(points[i], self.__distance)
             for neighbor in neigbors:
                 if points[i] != neighbor:
                     g.add_edge(points[i], neighbor, points[i].distance(neighbor))
-        
+
         for vertex in g.get_vertices():
             if g.get_vertex(vertex).color != "black":
                 g.get_vertex(vertex).color = "white"
             d = Delimitation()
-            d.add_point(vertex)  
+            d.add_point(vertex)
             self.__dfs_visit(g.get_vertex(vertex), d, area_registry)
             g.get_vertex(vertex).color = "black"
-        
-        valid_area_registry = {area: delimitation for area, delimitation in area_registry.items() if delimitation.is_valid_delimitation(self.__valid_points, self.__distance)}
+
+        valid_area_registry = {
+            area: delimitation
+            for area, delimitation in area_registry.items()
+            if delimitation.is_valid_delimitation(self.__valid_points, self.__distance)
+        }
         if len(valid_area_registry) > 0:
             maximum = max(valid_area_registry)
             return area_registry[maximum]
@@ -1155,7 +1190,6 @@ def main():
             elapsed_time = (time.time() - start_time) * 1000
             print(f"Size: {num_points}")
             print(f"Time: {elapsed_time:.2f}")
-            
 
         elif cmd == "draw_hull":
             if file_handler is None:
@@ -1170,7 +1204,7 @@ def main():
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
             print(f"Time: {elapsed_time:.2f}")
-  
+
         elif cmd == "draw_optimal_delimitation":
             if len(command) < 2:
                 print("Error: missing max distance argument.")
@@ -1197,7 +1231,7 @@ def main():
         #     if file_handler is None:
         #         print("Error: No points imported. Please use 'import_points' first.")
         #         continue
-        #   
+        #
         #     max_distance = int(command[1])
         #     start_time = time.time()
         #     delimitation = ApproximateDelimitation(file_handler.read_points(), max_distance)
@@ -1207,7 +1241,7 @@ def main():
         #     print(f"Line: {delimitation}")
         #     print(f"Area: {area:.2f}")
         #     print(f"Time: {elapsed_time:.2f}")
-        #     
+        #
 
         elif cmd == "make_map":
             if file_handler is None or delimitation is None:
@@ -1220,7 +1254,6 @@ def main():
             elapsed_time = (time.time() - start_time) * 1000
             print(f"Map: {file_name}")
             print(f"Time: {elapsed_time:.2f}")
-
 
         elif cmd == "quit":
             print("Done!")
