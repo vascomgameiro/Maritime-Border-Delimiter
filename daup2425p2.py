@@ -1231,7 +1231,12 @@ class ApproxDelimitation:
         # Build graph and adjacency list for the current remaining points
         graph = self.__build_graph(remaining_points)
         adjacency_data = self.__get_adjacency_list(graph)
-        non_visited_points = [point for point in remaining_points if point in adjacency_data]
+        non_visited_points = []
+        for point in remaining_points:
+            if point in adjacency_data:
+                non_visited_points.append(point)
+            else:
+                used_points.add(point)
 
         return remaining_points, used_points, adjacency_data, non_visited_points
 
@@ -1278,6 +1283,7 @@ class ApproxDelimitation:
         non_visited_points: List[Point],
         adjacency_data: Dict[Point, List[Point]],
         epsilon: float = 1e-1,
+        alpha: float = 0.95,
     ) -> Optional[Point]:
         """
         Finds the next point by calculating the forward angle between the current point and each candidate.
@@ -1287,6 +1293,8 @@ class ApproxDelimitation:
             reference_point (Point): The reference point used to calculate angles.
             non_visited_points (List[Point]): List of candidate points to select from.
             adjacency_data (Dict[Point, List[Point]]): Adjacency list with points connected within max distance.
+            epsilon (float): The maximum angle difference to consider points as nearly colinear.
+            alpha (float): The threshold ratio for significantly closer points.
 
         Returns:
             Optional[Point]: The next point in the traversal, or None if no valid point is found.
@@ -1309,15 +1317,19 @@ class ApproxDelimitation:
 
         # Calculate angles for each candidate
         angles = [(point, current_point.get_forward_angle(reference_point, point)) for point in candidate_points]
-
-        # Find the minimum angle
         min_angle = min(angles, key=lambda x: x[1])[1]
-
-        # Filter points with angles within epsilon of the minimum angle
         nearly_colinear_points = [point for point, angle in angles if abs(angle - min_angle) <= epsilon]
 
-        # Among nearly colinear points, choose the closest point
-        return min(nearly_colinear_points, key=lambda p: current_point.distance(p))
+        # Calculate distances for nearly colinear points
+        distances = [(point, current_point.distance(point)) for point in nearly_colinear_points]
+        min_distance = min(distances, key=lambda x: x[1])[1]
+        significantly_closer_points = [point for point, distance in distances if distance <= min_distance * alpha]
+
+        # If there are significantly closer points, choose the closest one; otherwise, return the overall closest
+        if significantly_closer_points:
+            return min(significantly_closer_points, key=lambda p: current_point.distance(p))
+        else:
+            return min(nearly_colinear_points, key=lambda p: current_point.get_forward_angle(reference_point, p))
 
 
 class FileHandler:
