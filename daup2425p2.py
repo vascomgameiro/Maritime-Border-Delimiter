@@ -41,8 +41,8 @@ class Point:
         self.__longitude = longitude
         earth_radius = 6371009  # in meters
         lat_dist = math.pi * earth_radius / 180.0
-        self.__y = nautical(meters=self.get_latitude() * lat_dist)  # type: ignore
-        self.__x = nautical(meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude())))  # type: ignore
+        self.__y = nautical(meters=self.get_latitude() * lat_dist)
+        self.__x = nautical(meters=self.get_longitude() * lat_dist * math.cos(math.radians(self.get_latitude())))
 
     def get_proj_x(self) -> float:
         """
@@ -437,14 +437,11 @@ class Delimitation:
         vertices = self.get_points()
         n = len(vertices)
 
-        # if n < 3:
-        #     raise ValueError("A polygon must have at least 3 points to calculate the area.")
+        if n < 3:
+            raise ValueError("A polygon must have at least 3 points to calculate the area.")
 
-        # if self.__collinearity_test(vertices):
-        #     raise ValueError("It is impossible to form a polygon with collinear points.")
-
-        if n < 3 or self.__collinearity_test(vertices):
-            return 0
+        if self.__collinearity_test(vertices):
+            raise ValueError("It is impossible to form a polygon with collinear points.")
 
         area = 0
         for i in range(n):
@@ -546,6 +543,8 @@ class Delimitation:
 
         Returns:
             tuple: A tuple of two tuples containing the min and max latitude, and min and max longitude.
+        
+        Complexity: O(1) 
         """
         return (
             (min(p1.get_latitude(), p2.get_latitude()), max(p1.get_latitude(), p2.get_latitude())),
@@ -648,12 +647,12 @@ class Delimitation:
 
             if self.intersects(p1=p3, p2=p4, p3=p1, p4=p2):
                 intersection = self.__intersection_point(p1=p3, p2=p4, p3=p1, p4=p2)
-                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()  # type: ignore
+                intersect_x, intersect_y = intersection.get_latitude(), intersection.get_longitude()
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
 
-                if (intersect_x == first_point.get_latitude() and intersect_y == first_point.get_longitude()) or (  # type: ignore
-                    intersect_x == last_point.get_latitude() and intersect_y == last_point.get_longitude()  # type: ignore
+                if (intersect_x == first_point.get_latitude() and intersect_y == first_point.get_longitude()) or (
+                    intersect_x == last_point.get_latitude() and intersect_y == last_point.get_longitude()
                 ):
                     continue
                 return True
@@ -668,8 +667,7 @@ class Delimitation:
 
         Arguments: points(ValidPoints)
 
-        Complexity: O(p+v), p being the number of points in the Delimitation object
-        and v being the number of points in the ValidPoints object.
+        Complexity: O(p), p being the number of points in the Delimitation object
         """
         if not isinstance(points, ValidPoints):
             raise ValueError("The stored points must be of type 'ValidPoints'.")
@@ -702,8 +700,8 @@ class Delimitation:
                 first_point = self.get_first()
                 last_point = self.get_last_two()[1]
                 ax.plot(
-                    [first_point.get_proj_x(), last_point.get_proj_x()],  # type: ignore
-                    [first_point.get_proj_y(), last_point.get_proj_y()],  # type: ignore
+                    [first_point.get_proj_x(), last_point.get_proj_x()],
+                    [first_point.get_proj_y(), last_point.get_proj_y()],
                     color="blue",
                     linewidth=1,
                 )
@@ -798,7 +796,7 @@ class Delimitation:
             return True
         return False
 
-    def is_point_inside(self, point: Point) -> bool:
+    def __is_point_inside(self, point: Point) -> bool:
         """
         Determines if a given point is inside the polygon formed by the delimitation points.
 
@@ -807,15 +805,16 @@ class Delimitation:
 
         Returns:
             bool: True if the point is inside the polygon, False otherwise.
+        
+        Complexity: O(p), p being the number of points in the Delimitation object
         """
         n = len(self.get_points())
         if n < 3:
-            return False  # A polygon must have at least 3 points
+            return False
 
         x, y = point.get_longitude(), point.get_latitude()
         inside = False
 
-        # Iterate through each edge of the polygon
         for i in range(n):
             p1 = self.get_points()[i]
             p2 = self.get_points()[(i + 1) % n]
@@ -927,40 +926,40 @@ class ConvexHull:
 
         Complexity: O(plog(p)), p being the number of points in the Delimitation object
         """
-        d = Delimitation()
+        delimitation = Delimitation()
         points = self.__points.get_all_points()
-        dictionary1 = dict()
+        ordered_angles = dict()
 
         start = min(points, key=lambda p: p.get_longitude())
 
         for i in range(self.__points.get_size()):
             ponto_ref = Point("ref", start.get_latitude() - 1, start.get_longitude() - 1)
             angle = start.get_forward_angle(ponto_ref, points[i])
-            dictionary1[points[i]] = angle
+            ordered_angles[points[i]] = angle
 
-        dictionary1.pop(start)
-        sorted_points = sorted(dictionary1, key=dictionary1.get)  # type: ignore
+        ordered_angles.pop(start)
+        sorted_points = sorted(ordered_angles, key=ordered_angles.get)
 
-        d.add_point(start)
+        delimitation.add_point(start)
 
         while len(sorted_points) > 0:
-            if d.size() < 2:
-                d.add_point(sorted_points[0])
+            if delimitation.size() < 2:
+                delimitation.add_point(sorted_points[0])
                 sorted_points.pop(0)
                 continue
 
-            (p2, p3) = d.get_last_two()
+            (p2, p3) = delimitation.get_last_two()
 
             curr_point = sorted_points[0]
             orientation_result = self.__orientation(p2, p3, curr_point)
 
             if orientation_result == 1:
-                d.pop_point()
+                delimitation.pop_point()
             else:
-                d.add_point(curr_point)
+                delimitation.add_point(curr_point)
                 sorted_points.pop(0)
 
-        return d
+        return delimitation
 
 
 class OptimalDelimitation:
@@ -983,6 +982,11 @@ class OptimalDelimitation:
 
         Complexity: O(1)
         """
+        if distance <= 0:
+            raise ValueError("Maximum distance must be positive.")
+        if not isinstance(valid_points, ValidPoints):
+            raise TypeError("valid_points must be of type ValidPoints.")
+        
         self.__distance = distance
         self.__valid_points = valid_points
 
@@ -1050,13 +1054,19 @@ class OptimalDelimitation:
         }
         if len(valid_area_registry) > 0:
             maximum = max(valid_area_registry)
-            return area_registry[maximum]
+            return valid_area_registry[maximum]
         return Delimitation()
 
 
 class ApproxDelimitation:
     """
-    A class to calculate the approximate optimal delimitation of a set of points.
+    The ApproxDelimitation class is responsible for finding the approximate delimitation with the
+    maximum area from a set of valid points, given a distance constraint.
+
+    Attributes:__max_distance : int,  __valid_points : ValidPoints
+
+    Methods: find_delimitation(): Returns the approximate delimitation (Delimitation) with maximum
+    area for the given set of points.
     """
 
     def __init__(self, valid_points: ValidPoints, max_distance: float):
@@ -1074,8 +1084,8 @@ class ApproxDelimitation:
         if not isinstance(valid_points, ValidPoints):
             raise TypeError("valid_points must be of type ValidPoints.")
 
-        self.__max_distance: float = max_distance
-        self.__valid_points: ValidPoints = valid_points
+        self.__max_distance = max_distance
+        self.__valid_points = valid_points
 
     def __build_graph(self, points: List[Point]) -> Graph:
         """
@@ -1085,7 +1095,7 @@ class ApproxDelimitation:
             points (List[Point]): A list of points to connect.
         Returns:
             Graph: A graph containing connected points.
-        Complexity: O(N^2), where N is the number of points, due to pairwise distance checks.
+        Complexity: O(p^2), where p is the number of points, due to pairwise distance checks.
         """
         graph = Graph()
         for i, point1 in enumerate(points):
@@ -1102,9 +1112,11 @@ class ApproxDelimitation:
 
         Args:
             graph (Graph): A graph containing connected points.
+        
         Returns:
             Dict[Point, List[Point]]: A dictionary where each key is a Point, and values are lists of connected Points.
-        Complexity: O(N), where N is the number of points in the graph.
+        
+        Complexity: O(p), where p is the number of points in the graph.
         """
         adjacency_list = {}
         invalid_points = set()
@@ -1140,7 +1152,7 @@ class ApproxDelimitation:
         Returns:
             Tuple[Optional[Point], Optional[Point]]: The reference and current points. Returns (None, None) if empty.
 
-        Complexity: O(N^2)
+        Complexity: O(p^2)
         """
         if not non_visited_points:
             used_points.add(self.__start_point)
@@ -1171,7 +1183,7 @@ class ApproxDelimitation:
         Returns:
             Delimitation: The constructed delimitation connecting the points in an optimal manner.
 
-        Complexity: O(N^2), where N is the number of points, due to pairwise distance checks and angle calculations.
+        Complexity: O(p^2), where p is the number of points, due to pairwise distance checks and angle calculations.
         """
         remaining_points = self.__valid_points.get_all_points()
         max_delim = Delimitation()
@@ -1211,14 +1223,15 @@ class ApproxDelimitation:
 
         Returns:
             Tuple containing the updated remaining points, used points, adjacency data, and non-visited points.
+        
         Complexity:
-            O(N), where N is the number of points in the valid points collection.
+            O(p), where p is the number of points in the valid points collection.
         """
         # Update used points
         used_points.update(
             point
             for point in self.__valid_points.get_all_points()
-            if point in max_delim.get_points() or max_delim.is_point_inside(point)
+            if point in max_delim.get_points() or max_delim.__is_point_inside(point)
         )
 
         # Reset delimitation and start point for the new cycle
@@ -1249,8 +1262,9 @@ class ApproxDelimitation:
         Args:
             adjacency_data (Dict[Point, List[Point]]): Adjacency list for points within the maximum distance.
             non_visited_points (List[Point]): List of points yet to be visited in this iteration.
+        
         Complexity:
-            O(N^2), where N is the number of points in the adjacency data.
+            O(p^2), where p is the number of points in the adjacency data.
         """
         while True:
             reference_point, current_point = self.__get_points(non_visited_points, adjacency_data, used_points)
@@ -1299,7 +1313,7 @@ class ApproxDelimitation:
         Returns:
             Optional[Point]: The next point in the traversal, or None if no valid point is found.
 
-        Complexity: O(N), where N is the number of non-visited points.
+        Complexity: O(p), where p is the number of non-visited points.
         """
 
         candidate_points = [
@@ -1341,6 +1355,7 @@ class FileHandler:
     Attributes:
         __filename (str): The name of the file from which point data will be read.
         __points (ValidPoints): The ValidPoints object made of the file points
+        __map_name (None/ str): The name of the map file created
 
     Methods:
         __init__(str): Initializes a new FileHandler object with the specified file name.
@@ -1352,6 +1367,8 @@ class FileHandler:
         make_map(Delimitation): Creates an HTML file containing a map
         that represents the points stored in the ValidPoints object as circles,
         and the provided Delimitation object as a line. Uses the folium module to generate the map.
+
+        get_map_name(): Return the name of the map file create
 
         __repr__(): Returns a string representation of the FileHandler object, including
         the file name and the points that have been imported.
@@ -1367,6 +1384,7 @@ class FileHandler:
         """
         self.__filename = filename
         self.__points = self.read_points()
+        self.__map_name = None
 
     def read_points(self) -> ValidPoints:
         """
@@ -1396,8 +1414,7 @@ class FileHandler:
 
         Arguments: delimitation(Delimitation)
 
-        Complexity: O(plog(p)+d), p being the number of points of the ValidPoints object and d
-        being the number of points of the Delimitation object
+        Complexity: O(plog(p)), p being the number of points of the ValidPoints object
         """
         folium_map = folium.Map()
         points = self.__points.get_all_points()
@@ -1427,7 +1444,19 @@ class FileHandler:
                 folium.PolyLine(locations=del_coordinates, color="red", weight=2.5).add_to(folium_map)
 
         map_name = f"map_{time.time()}.html"
+        self.__map_name = map_name
         folium_map.save(map_name)
+    
+    def get_map_name(self) -> str:
+        """
+        This method returns the name of the map file created.
+
+        Returns: str
+
+        Complexity: O(1)
+        """
+        return self.__map_name
+
 
     def __repr__(self) -> str:
         """
@@ -1479,7 +1508,10 @@ def main():
                 continue
             start_time = time.time()
             delimitation = ConvexHull(file_handler.read_points()).find_delimitation()
-            area = delimitation.get_area()
+            try:
+                area = delimitation.get_area()
+            except ValueError:
+                area = 0
             elapsed_time = (time.time() - start_time) * 1000
 
             print("Type: Convex Hull")
@@ -1499,7 +1531,10 @@ def main():
             start_time = time.time()
             delimitation = OptimalDelimitation(file_handler.read_points(), max_distance).find_delimitation()
             elapsed_time = (time.time() - start_time) * 1000
-            area = delimitation.get_area()
+            try:
+                area = delimitation.get_area()
+            except ValueError:
+                area = 0
             print("Type: Optimal Delimitation")
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
@@ -1517,7 +1552,10 @@ def main():
             start_time = time.time()
             delimitation = ApproxDelimitation(file_handler.read_points(), max_distance).find_delimitation()
             elapsed_time = (time.time() - start_time) * 1000
-            area = delimitation.get_area()
+            try:
+                area = delimitation.get_area()
+            except ValueError:
+                area = 0
             print("Type: Approximate Delimitation")
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
@@ -1528,11 +1566,9 @@ def main():
                 print("Error: No points or delimitation available.")
                 continue
             start_time = time.time()
-            timestamp = datetime.now().timestamp()
-            file_name = f"map_{timestamp}.html"
             file_handler.make_map(delimitation)
             elapsed_time = (time.time() - start_time) * 1000
-            print(f"Map: {file_name}")
+            print(f"Map: {file_handler.get_map_name()}")
             print(f"Time: {elapsed_time:.2f}")
 
         elif cmd == "quit":
