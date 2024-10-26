@@ -5,7 +5,7 @@ from pythonds3.graphs import Graph
 from daup2425p2 import Delimitation, Point, ValidPoints
 
 
-class ApproxOptimalDelimitation:
+class ApproxDelimitation:
     """
     A class to calculate the approximate optimal delimitation of a set of points.
     """
@@ -32,6 +32,10 @@ class ApproxOptimalDelimitation:
         """
         Builds a graph connecting points within the maximum distance.
 
+        Args:
+            points (List[Point]): A list of points to connect.
+        Returns:
+            Graph: A graph containing connected points.
         Complexity: O(N^2), where N is the number of points, due to pairwise distance checks.
         """
         graph = Graph()
@@ -47,9 +51,10 @@ class ApproxOptimalDelimitation:
         """
         Generates an adjacency list where each point is connected to at least two other points within the max distance.
 
+        Args:
+            graph (Graph): A graph containing connected points.
         Returns:
             Dict[Point, List[Point]]: A dictionary where each key is a Point, and values are lists of connected Points.
-
         Complexity: O(N), where N is the number of points in the graph.
         """
         adjacency_list = {}
@@ -82,11 +87,11 @@ class ApproxOptimalDelimitation:
         Args:
             non_visited_points (List[Point]): List of points that have not yet been visited.
             adjacency_data (Dict[Point, List[Point]]): Adjacency list containing connections within max distance.
-
+            used_points (set): Set of points used in previous delimitations.
         Returns:
             Tuple[Optional[Point], Optional[Point]]: The reference and current points. Returns (None, None) if empty.
 
-        Complexity: O(1), as it performs a constant-time lookup and selection operations.
+        Complexity: O(N^2)
         """
         if not non_visited_points:
             used_points.add(self.__start_point)
@@ -122,20 +127,12 @@ class ApproxOptimalDelimitation:
         remaining_points = self.__valid_points.get_all_points()
         max_delim = Delimitation()
         used_points = set()
-        previous_remaining_points = set()
 
         while len(remaining_points) > 3:
             # Set up points, graph, and adjacency data for the new iteration
             remaining_points, used_points, adjacency_data, non_visited_points = self._initialize_iteration(
                 remaining_points, max_delim, used_points
             )
-
-            # Early exit if remaining_points has not changed from the previous iteration
-            if set(remaining_points) == previous_remaining_points:
-                return max_delim
-
-            # Update previous_remaining_points to current remaining_points for the next iteration
-            previous_remaining_points = set(remaining_points)
 
             # Exit if fewer than 3 points left to form a valid delimitation
             if len(adjacency_data) < 3:

@@ -12,6 +12,8 @@ from geopy.distance import geodesic
 from geopy.units import nautical
 from pythonds3 import Graph, Vertex
 
+from Aprox_2 import ApproxDelimitation
+
 
 class Point:
     """
@@ -1162,12 +1164,12 @@ def main():
     """
     Main function of the program, which will continuously prompt the user for input commands.
     Commands available are:
-    - import_points <file_name>
-    - draw_hull
-    - draw_optimal_delimitation <max_distance>
-    - draw_approx_delimitation <max_distance>
-    - make_map
-    - quit
+    - import_points <file_name> : Load points from a file.
+    - draw_hull : Draw the convex hull of the imported points.
+    - draw_optimal_delimitation <max_distance> : Draw optimal delimitation for the specified max distance.
+    - draw_approx_delimitation <max_distance> : Draw approximate delimitation for the specified max distance.
+    - make_map : Generate a map of the points with the delimitation.
+    - quit : Exit the program.
     """
     file_handler = None
     delimitation = None
@@ -1223,25 +1225,23 @@ def main():
             print(f"Area: {area:.2f}")
             print(f"Time: {elapsed_time:.2f}")
 
-        # TODO: Implement approximate delimitation
-        # elif cmd == "draw_approx_delimitation":
-        #     if len(command) < 2:
-        #         print("Error: missing max distance argument.")
-        #         continue
-        #     if file_handler is None:
-        #         print("Error: No points imported. Please use 'import_points' first.")
-        #         continue
-        #
-        #     max_distance = int(command[1])
-        #     start_time = time.time()
-        #     delimitation = ApproximateDelimitation(file_handler.read_points(), max_distance)
-        #     elapsed_time = (time.time() - start_time) * 1000
-        #     area = delimitation.calculate_area()
-        #     print("Type: Approximate Delimitation")
-        #     print(f"Line: {delimitation}")
-        #     print(f"Area: {area:.2f}")
-        #     print(f"Time: {elapsed_time:.2f}")
-        #
+        elif cmd == "draw_approx_delimitation":
+            if len(command) < 2:
+                print("Error: missing max distance argument.")
+                continue
+            if file_handler is None:
+                print("Error: No points imported. Please use 'import_points' first.")
+                continue
+
+            max_distance = int(command[1])
+            start_time = time.time()
+            delimitation = ApproxDelimitation(file_handler.read_points(), max_distance).find_delimitation()
+            elapsed_time = (time.time() - start_time) * 1000
+            area = delimitation.get_area()
+            print("Type: Approximate Delimitation")
+            print(f"Line: {delimitation}")
+            print(f"Area: {area:.2f}")
+            print(f"Time: {elapsed_time:.2f}")
 
         elif cmd == "make_map":
             if file_handler is None or delimitation is None:
@@ -1263,10 +1263,6 @@ def main():
             print(
                 f"Unknown command: {cmd}. Valid Commands: import_points, draw_hull, draw_optimal_delimitation <max_distance>, draw_approx_delimitation <max_distance>, make_map, quit"
             )
-
-
-if __name__ == "__main__":
-    main()
 
 
 if __name__ == "__main__":
