@@ -775,23 +775,23 @@ class Delimitation:
             if self.get_first().distance(self.get_last_two()[1]) > distance:
                 return False
             for i in range(self.size() - 1):
-                if del_points[i].distance(del_points[i + 1]) <= distance:
+                if del_points[i].distance(del_points[i+1]) <= distance:
                     continue
                 else:
                     return False
             for i in range(len(del_points)):
                 p1 = del_points[i]
-                p2 = del_points[(i + 1) % len(del_points)]
+                p2 = del_points[(i + 1) % len(del_points)] 
 
                 for j in range(len(del_points)):
-                    if j == i or (j + 1) % len(del_points) == i or (j == (i + 1) % len(del_points)):
-                        continue
-
                     p3 = del_points[j]
                     p4 = del_points[(j + 1) % len(del_points)]
-
+                    if j == i or (j + 1) % len(del_points) == i or (j == (i + 1) % len(del_points)):
+                        if self.intersects(p1, p2, p3, p4) and self.__intersection_point(p1, p2, p3, p4) not in {p1,p2, p3,p4}:
+                            return False
+                        continue
                     if self.intersects(p1, p2, p3, p4):
-                        return False
+                        return False  
 
             return True
         return False
@@ -1466,6 +1466,7 @@ def main():
             elapsed_time = (time.time() - start_time) * 1000
             print(f"Size: {num_points}")
             print(f"Time: {elapsed_time:.2f}")
+            print("\n")
 
         elif cmd == "draw_hull":
             if file_handler is None:
@@ -1483,6 +1484,7 @@ def main():
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
             print(f"Time: {elapsed_time:.2f}")
+            print("\n")
 
         elif cmd == "draw_optimal_delimitation":
             if len(command) < 2:
@@ -1504,6 +1506,7 @@ def main():
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
             print(f"Time: {elapsed_time:.2f}")
+            print("\n")
 
         elif cmd == "draw_approx_delimitation":
             if len(command) < 2:
@@ -1525,10 +1528,11 @@ def main():
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
             print(f"Time: {elapsed_time:.2f}")
+            print("\n")
 
         elif cmd == "make_map":
-            if file_handler is None or delimitation is None:
-                print("Error: No points or delimitation available.")
+            if file_handler is None:
+                print("Error: No points available.")
                 continue
             start_time = time.time()
             file_handler.make_map(delimitation)
@@ -1537,7 +1541,7 @@ def main():
             print(f"Time: {elapsed_time:.2f}")
 
         elif cmd == "quit":
-            print("Done!")
+            print("Done!\n")
             break
 
         else:
