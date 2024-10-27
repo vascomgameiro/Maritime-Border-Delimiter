@@ -4,7 +4,6 @@ This module contains classes and methods for processing geographical points and 
 
 import math
 import time
-from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 import folium
@@ -543,8 +542,8 @@ class Delimitation:
 
         Returns:
             tuple: A tuple of two tuples containing the min and max latitude, and min and max longitude.
-        
-        Complexity: O(1) 
+
+        Complexity: O(1)
         """
         return (
             (min(p1.get_latitude(), p2.get_latitude()), max(p1.get_latitude(), p2.get_latitude())),
@@ -772,31 +771,36 @@ class Delimitation:
         del_points = self.get_points()
         v_p_points = valid_points.get_all_points()
         if set(del_points).issubset(set(v_p_points)):
-            
             if self.get_first().distance(self.get_last_two()[1]) > distance:
                 return False
-            
+
             for i in range(self.size() - 1):
-                if del_points[i].distance(del_points[i+1]) <= distance:
+                if del_points[i].distance(del_points[i + 1]) <= distance:
                     continue
                 else:
                     return False
-            
+
             for i in range(len(del_points)):
                 p1 = del_points[i]
-                p2 = del_points[(i + 1) % len(del_points)] 
+                p2 = del_points[(i + 1) % len(del_points)]
 
                 for j in range(len(del_points)):
                     p3 = del_points[j]
                     p4 = del_points[(j + 1) % len(del_points)]
                     if j == i or (j + 1) % len(del_points) == i or (j == (i + 1) % len(del_points)):
                         vertices = [(vertex.get_latitude(), vertex.get_longitude()) for vertex in (p1, p2, p3, p4)]
-                        if (self.intersects(p1,p2,p3,p4) and 
-                        (self.__intersection_point(p1,p2,p3,p4).get_latitude(), self.__intersection_point(p1,p2,p3,p4).get_longitude()) not in vertices):
+                        if (
+                            self.intersects(p1, p2, p3, p4)
+                            and (
+                                self.__intersection_point(p1, p2, p3, p4).get_latitude(),
+                                self.__intersection_point(p1, p2, p3, p4).get_longitude(),
+                            )
+                            not in vertices
+                        ):
                             return False
                         continue
                     if self.intersects(p1, p2, p3, p4):
-                        return False  
+                        return False
 
             return True
         return False
@@ -810,7 +814,7 @@ class Delimitation:
 
         Returns:
             bool: True if the point is inside the polygon, False otherwise.
-        
+
         Complexity: O(p), p being the number of points in the Delimitation object
         """
         n = len(self.get_points())
@@ -889,12 +893,12 @@ class ConvexHull:
         Computes the convex hull (Delimitation) for the given set of points.
         This method identifies the starting point with the lowest longitude and
         iteratively adds points to the convex hull based on their angular orientation
-        relative to the last two points added to the hull. The process continues until 
+        relative to the last two points added to the hull. The process continues until
         the starting point is reached again.
 
         Returns:
             Delimitation: An object containing the points that make up the convex hull.
-        
+
         Complexity:
             O(p^2), where p is the number of points in the Delimitation object.
         """
@@ -905,7 +909,6 @@ class ConvexHull:
         delimitation.add_point(start)
         points.remove(start)
 
-
         while len(points) > 0:
             if delimitation.size() < 2:
                 p2 = Point("ref", start.get_latitude() - 1, start.get_longitude() - 1)
@@ -914,9 +917,9 @@ class ConvexHull:
                 delimitation.add_point(next_point)
                 points.remove(next_point)
                 continue
-            
+
             (p2, p3) = delimitation.get_last_two()
-            
+
             if delimitation.size() < 3:
                 next_point = min(points, key=lambda p: p3.get_forward_angle(p2, p))
             else:
@@ -928,7 +931,7 @@ class ConvexHull:
 
             delimitation.add_point(next_point)
             points.remove(next_point)
-        
+
         return delimitation
 
 
@@ -956,7 +959,7 @@ class OptimalDelimitation:
             raise ValueError("Maximum distance must be positive.")
         if not isinstance(valid_points, ValidPoints):
             raise TypeError("valid_points must be of type ValidPoints.")
-        
+
         self.__distance = distance
         self.__valid_points = valid_points
 
@@ -1082,10 +1085,10 @@ class ApproxDelimitation:
 
         Args:
             graph (Graph): A graph containing connected points.
-        
+
         Returns:
             Dict[Point, List[Point]]: A dictionary where each key is a Point, and values are lists of connected Points.
-        
+
         Complexity: O(p), where p is the number of points in the graph.
         """
         adjacency_list = {}
@@ -1193,7 +1196,7 @@ class ApproxDelimitation:
 
         Returns:
             Tuple containing the updated remaining points, used points, adjacency data, and non-visited points.
-        
+
         Complexity:
             O(p), where p is the number of points in the valid points collection.
         """
@@ -1232,7 +1235,7 @@ class ApproxDelimitation:
         Args:
             adjacency_data (Dict[Point, List[Point]]): Adjacency list for points within the maximum distance.
             non_visited_points (List[Point]): List of points yet to be visited in this iteration.
-        
+
         Complexity:
             O(p^2), where p is the number of points in the adjacency data.
         """
@@ -1416,7 +1419,7 @@ class FileHandler:
         map_name = f"map_{time.time()}.html"
         self.__map_name = map_name
         folium_map.save(map_name)
-    
+
     def get_map_name(self) -> str:
         """
         This method returns the name of the map file created.
@@ -1426,7 +1429,6 @@ class FileHandler:
         Complexity: O(1)
         """
         return self.__map_name
-
 
     def __repr__(self) -> str:
         """
@@ -1454,7 +1456,7 @@ def main():
     delimitation = None
 
     while True:
-        command = input("?> ").strip().split()
+        command = input().strip().split()
         if len(command) == 0:
             continue
         cmd = command[0]
@@ -1469,9 +1471,9 @@ def main():
             file_handler = FileHandler(file_name)
             num_points = file_handler.read_points().get_size()
             elapsed_time = (time.time() - start_time) * 1000
+
             print(f"Size: {num_points}")
-            print(f"Time: {elapsed_time:.2f}")
-            print("\n")
+            print(f"Time: {elapsed_time:.2f}\n")
 
         elif cmd == "draw_hull":
             if file_handler is None:
@@ -1488,8 +1490,7 @@ def main():
             print("Type: Convex Hull")
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
-            print(f"Time: {elapsed_time:.2f}")
-            print("\n")
+            print(f"Time: {elapsed_time:.2f}\n")
 
         elif cmd == "draw_optimal_delimitation":
             if len(command) < 2:
@@ -1507,11 +1508,11 @@ def main():
                 area = delimitation.get_area()
             except ValueError:
                 area = 0
+
             print("Type: Optimal Delimitation")
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
-            print(f"Time: {elapsed_time:.2f}")
-            print("\n")
+            print(f"Time: {elapsed_time:.2f}\n")
 
         elif cmd == "draw_approx_delimitation":
             if len(command) < 2:
@@ -1529,11 +1530,11 @@ def main():
                 area = delimitation.get_area()
             except ValueError:
                 area = 0
+
             print("Type: Approximate Delimitation")
             print(f"Line: {delimitation}")
             print(f"Area: {area:.2f}")
-            print(f"Time: {elapsed_time:.2f}")
-            print("\n")
+            print(f"Time: {elapsed_time:.2f}\n")
 
         elif cmd == "make_map":
             if file_handler is None:
@@ -1543,7 +1544,7 @@ def main():
             file_handler.make_map(delimitation)
             elapsed_time = (time.time() - start_time) * 1000
             print(f"Map: {file_handler.get_map_name()}")
-            print(f"Time: {elapsed_time:.2f}")
+            print(f"Time: {elapsed_time:.2f}\n")
 
         elif cmd == "quit":
             print("Done!\n")
