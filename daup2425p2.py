@@ -772,13 +772,16 @@ class Delimitation:
         del_points = self.get_points()
         v_p_points = valid_points.get_all_points()
         if set(del_points).issubset(set(v_p_points)):
+            
             if self.get_first().distance(self.get_last_two()[1]) > distance:
                 return False
+            
             for i in range(self.size() - 1):
                 if del_points[i].distance(del_points[i+1]) <= distance:
                     continue
                 else:
                     return False
+            
             for i in range(len(del_points)):
                 p1 = del_points[i]
                 p2 = del_points[(i + 1) % len(del_points)] 
@@ -787,7 +790,9 @@ class Delimitation:
                     p3 = del_points[j]
                     p4 = del_points[(j + 1) % len(del_points)]
                     if j == i or (j + 1) % len(del_points) == i or (j == (i + 1) % len(del_points)):
-                        if self.intersects(p1, p2, p3, p4) and self.__intersection_point(p1, p2, p3, p4) not in {p1,p2, p3,p4}:
+                        vertices = [(vertex.get_latitude(), vertex.get_longitude()) for vertex in (p1, p2, p3, p4)]
+                        if (self.intersects(p1,p2,p3,p4) and 
+                        (self.__intersection_point(p1,p2,p3,p4).get_latitude(), self.__intersection_point(p1,p2,p3,p4).get_longitude()) not in vertices):
                             return False
                         continue
                     if self.intersects(p1, p2, p3, p4):
