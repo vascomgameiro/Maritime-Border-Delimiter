@@ -867,7 +867,7 @@ class ConvexHull:
     A class to calculate the convex hull from a set of valid points.
 
     The convex hull is the smallest convex shape that encloses a set of points.
-    This class uses the orientation method to find the hull by iterating over the points,
+    This class uses the gift wrapping method to find the hull by iterating over the points,
     ensuring that only those points that form part of the hull are retained.
 
     Attributes:
@@ -1097,14 +1097,14 @@ class ApproxDelimitation:
 
         # Remove points with less than 2 connections
         for vertex in points:
-            point: Point = vertex.get_key()
+            point = vertex.get_key()
             connections = [conn.get_key() for conn in vertex.get_neighbors() if conn.get_key() not in invalid_points]
             if len(connections) < 2:
                 invalid_points.add(point)
 
         # Build adjacency list, excluding invalid points (different loops help to filter points that were only connected to invalid points)
         for vertex in [v for v in points if v not in invalid_points]:
-            point: Point = vertex.get_key()
+            point = vertex.get_key()
             connections = [conn.get_key() for conn in vertex.get_neighbors() if conn.get_key() not in invalid_points]
             if len(connections) > 1:
                 adjacency_list[point] = connections
