@@ -1,8 +1,14 @@
+"""
+Unit Test for the first part of the project, developed by us.
+"""
+
 from unittest.mock import patch
 
 import pytest
 
-from mytool import Delimitation, Point, ValidPoints
+from src.delimitation import Delimitation
+from src.point import Point
+from src.valid_points import ValidPoints
 
 
 def test_delimitation_initialization():
@@ -212,9 +218,7 @@ def test_get_area_less_than_three_points():
     delim.add_point(p2)
 
     # Test that ValueError is raised with less than 3 points
-    with pytest.raises(
-        ValueError, match="A polygon must have at least 3 points to calculate the area."
-    ):
+    with pytest.raises(ValueError, match="A polygon must have at least 3 points to calculate the area."):
         delim.get_area()
 
 
@@ -241,9 +245,7 @@ def test_get_area_collinear_points():
     delim.add_point(p3)
 
     # Test that ValueError is raised for collinear points
-    with pytest.raises(
-        ValueError, match="It is impossible to form a polygon with collinear points."
-    ):
+    with pytest.raises(ValueError, match="It is impossible to form a polygon with collinear points."):
         delim.get_area()
 
 
@@ -435,9 +437,7 @@ def test_get_first_no_points():
     delim = Delimitation()
 
     try:
-        assert (
-            delim.get_first() is None
-        ), "Expected None when calling get_first on an empty Delimitation"
+        assert delim.get_first() is None, "Expected None when calling get_first on an empty Delimitation"
 
     except IndexError:
         pass  # Assuming IndexError or a custom exception is raised
@@ -613,27 +613,21 @@ def test_add_multiple_points_2():
 def test_add_invalid_point_type():
     delim = Delimitation()
 
-    with pytest.raises(
-        ValueError, match="nly Point objects can be added to the Delimitation object"
-    ):
+    with pytest.raises(ValueError, match="nly Point objects can be added to the Delimitation object"):
         delim.add_point("Not a Point")  # Trying to add a string #type: ignore
 
 
 def test_add_integer_instead_of_point():
     delim = Delimitation()
 
-    with pytest.raises(
-        ValueError, match="Only Point objects can be added to the Delimitation object"
-    ):
+    with pytest.raises(ValueError, match="Only Point objects can be added to the Delimitation object"):
         delim.add_point(123)  # Trying to add an integer # Trying to add a string #type: ignore
 
 
 def test_add_none_as_point():
     delim = Delimitation()
 
-    with pytest.raises(
-        ValueError, match="Only Point objects can be added to the Delimitation object"
-    ):
+    with pytest.raises(ValueError, match="Only Point objects can be added to the Delimitation object"):
         delim.add_point(None)  # type: ignore
 
 
@@ -897,5 +891,7 @@ def test_crosses_delimitation():
     if not d.crosses_delimitation(line_p1, line_p2):
         print("All crosses delimitation tests passed!")
 
+    print("All crosses delimitation tests passed!")
+    print("All crosses delimitation tests passed!")
     print("All crosses delimitation tests passed!")
     print("All crosses delimitation tests passed!")
